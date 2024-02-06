@@ -14,8 +14,9 @@
 #
 CRAZYFLIE_BASE := ../../crazyflie-firmware
 
-
-EXTRA_CFLAGS += -I$(PWD)/src/tof_driver
+EXTRA_CFLAGS += -I$(PWD)/src
+EXTRA_CFLAGS += -I$(PWD)/src/tof_api
+EXTRA_CFLAGS += -Wno-error
 
 #
 # We override the default OOT_CONFIG here, we could also name our config

@@ -1,4 +1,3 @@
-#include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -18,7 +17,6 @@
 // Custom Includes
 #include "vl53l5cx_api.h"
 #include "network_evaluate_tof.h"
-#include "I2C_expander.h" //Written by Hanna Muller of ETH Zurich. Thank you, Hanna!
 
 #define MAX_THRUST 0.15f
 // PWM to thrust coefficients
@@ -26,7 +24,7 @@
 #define B 1.032633e-6f
 #define C 5.484560e-4f
 
-// static float maxThrustFactor = 0.70f;
+// static float maxThrustFactor = 0.70f; Is not used.
 static bool relVel = true;
 static bool relOmega = true;
 static bool relXYZ = true;
@@ -107,14 +105,12 @@ void concatTOF(VL53L5CX_Configuration *p_dev, VL53L5CX_ResultsData *p_data, floa
 
 	if (sensor_status){
 		vl53l5cx_get_ranging_data(p_dev, p_data);
-
 		//Implementation One: Use ONLY the middle of each column
 		if(1) {
 			for (int i=0;i<8;i++) {
 				(*tof_input)[i] = (p_data->distance_mm[31-i] + p_data->distance_mm[39-i])/2;
 			}
 		}
-		//Implementation Two: Use the MIN of each column 
 	}
 }
 
@@ -134,6 +130,11 @@ void controllerOutOfTreeInit() {
 	control_nn.thrust_2 = 0.0f;
 	control_nn.thrust_3 = 0.0f;
 
+	uint8_t alive_status = vl53l5cx_is_alive(&front_sensor, &sensor_status);
+
+	if(!sensor_status || alive_status) {
+		DEBUG_PRINT("VL53L5CX Is Not Connected!");
+	}
 	//Initialize sensor platform
 	front_sensor.platform = VL53L5CX_DEFAULT_I2C_ADDRESS;
 	uint8_t init_status = vl53l5cx_init(&front_sensor);

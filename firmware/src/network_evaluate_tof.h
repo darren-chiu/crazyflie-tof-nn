@@ -3,6 +3,7 @@
 
 #include <math.h>
 #include <stdbool.h>
+#include <string.h>
 #include "debug.h"
 
 #define OBST_DIM 8 // ignore this if you are using a multi-agent policy without obstacle encoder or just a single agent policy

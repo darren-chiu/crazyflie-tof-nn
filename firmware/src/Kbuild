@@ -1,1 +1,3 @@
 obj-y += tof_nn_controller.o
+obj-y += network_evaluate_tof.o
+obj-y += tof_api/
