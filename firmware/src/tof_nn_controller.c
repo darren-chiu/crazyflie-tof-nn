@@ -1,54 +1,78 @@
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
+#include "app.h"
 #include "FreeRTOS.h"
+
 #include "task.h"
 #include "math3d.h"
 
 // Edit the debug name to get nice debug prints
 #define DEBUG_MODULE "TOF_NN_CONTROLLER"
 
+// When defined, enables the ToF module.
+#define TOF_ENABLE 
+
+// (11 Bytes + 16 bytes + 4bytes*8) / 2 = 30. 60 For assurance
+// #define TOF_STACK 2*(configMINIMAL_STACK_SIZE)
+
 // Crazyflie Incldues
 #include "debug.h"
 #include "controller.h"
 #include "stabilizer_types.h"
-#include "app.h"
 
 // Custom Includes
 #include "vl53l5cx_api.h"
 #include "network_evaluate_tof.h"
+// #include "network_evaluate_takeoff.h"
+#include "I2C_expander.h"
 
-#define MAX_THRUST 0.15f
+// #define MAX_THRUST 0.15f
 // PWM to thrust coefficients
 #define A 2.130295e-11f
 #define B 1.032633e-6f
 #define C 5.484560e-4f
 
-// static float maxThrustFactor = 0.70f; Is not used.
-static bool relVel = true;
-static bool relOmega = true;
-static bool relXYZ = true;
-static uint16_t freq = 500;
+// static float maxThrustFactor = 0.70f;
+static bool relVel = false;
+static bool relOmega = false;
+static bool relXYZ = false;
 
 static control_t_n control_nn;
-static struct mat33 rot;
-static uint32_t usec_eval;
 
-static VL53L5CX_Configuration front_sensor;
+static VL53L5CX_Configuration f_dev;
 static VL53L5CX_ResultsData ranging_data;
 static uint8_t sensor_status;
 
-/**
- * @brief Defines the input array for the neural network. First 18 are state variables of the quadcopter. 
- * 
- */
-static float state_array[18];
+static const float OBST_MAX = 2.0f;
+static const float SAFE_HEIGHT = 0.5f;
+static int state_dim = 19;
 
 /**
  * @brief Defines the minimum distance of each input column of the ToF sensor. 
+ * This is an intermeddiate that is a copy of the sensor matrix.
  * 
  */
-static float tof_input[OBST_DIM];
+static uint16_t tof_input[OBST_DIM*OBST_DIM];
+
+/**
+ * @brief Defines the number of valid targets in each zone
+ * 
+ */
+static uint8_t tof_target[OBST_DIM*OBST_DIM];
+
+/**
+ * @brief Defines the status of each zone where 5 and 9 means that the range status
+ * is OK.
+ */
+static uint8_t tof_status[OBST_DIM*OBST_DIM];
+
+/**
+ * @brief The input vector seen for the obstacle encoder. 
+ * 
+ */
+static float obstacle_inputs[OBST_DIM] = {2.0f};
 
 /**
  * @brief Scale the given V to a range from 0 to 1.
@@ -93,34 +117,85 @@ void normalizeThrust(control_t_n *control_nn, int *PWM_0, int *PWM_1, int *PWM_2
 }
 
 /**
- * @brief Collects and processes ToF matrix data. 
- * Transforms the data into the flattened vector that the network accepts.
- * 
- * @param p_dev 
- * @param p_results
- * @param tof_input
+ * @brief Collects ToF matrix data. 
  */
-void concatTOF(VL53L5CX_Configuration *p_dev, VL53L5CX_ResultsData *p_data, float (*tof_input)[]) {
-	vl53l5cx_check_data_ready(p_dev, &sensor_status);
+void tof_task(VL53L5CX_Configuration* f_dev, VL53L5CX_ResultsData* ranging_data, uint8_t* sensor_status, 
+				uint16_t tof_input[OBST_DIM*OBST_DIM], uint8_t tof_target[OBST_DIM*OBST_DIM], uint8_t tof_status[OBST_DIM*OBST_DIM]) {
 
-	if (sensor_status){
-		vl53l5cx_get_ranging_data(p_dev, p_data);
-		//Implementation One: Use ONLY the middle of each column
-		if(1) {
-			for (int i=0;i<8;i++) {
-				(*tof_input)[i] = (p_data->distance_mm[31-i] + p_data->distance_mm[39-i])/2;
-			}
-		}
+	vl53l5cx_check_data_ready(f_dev, sensor_status);
+
+	if (*sensor_status){
+		vl53l5cx_get_ranging_data(f_dev, ranging_data);
+		memcpy(tof_input, (uint16_t *)(&ranging_data->distance_mm[0]), OBST_DIM*OBST_DIM*2);
+		// memcpy(tof_target, (uint8_t *)(&ranging_data->nb_target_detected[0]), OBST_DIM*OBST_DIM);
+    	memcpy(tof_status, (uint8_t *)(&ranging_data->target_status[0]), OBST_DIM*OBST_DIM);
 	}
+	
+	// DEBUG_PRINT("TOF Task Value: %i\n", tof_input[36]);
 }
 
 // We still need an appMain() function, but we will not really use it. Just let it quietly sleep.
 void appMain() {
-  DEBUG_PRINT("Waiting for activation ...\n");
 
-  while(1) {
-    vTaskDelay(M2T(2000));
-  }
+	//Initialize sensor platform
+	#ifdef TOF_ENABLE
+	f_dev.platform = VL53L5CX_DEFAULT_I2C_ADDRESS;
+	DEBUG_PRINT("Set VL53L5CX Address\n"); 
+
+	vTaskDelay(M2T(100)); 
+
+	sensor_status = vl53l5cx_init(&f_dev);
+	if (sensor_status == 0) {
+		DEBUG_PRINT("VL53L5CX Initialize: Pass\n"); 
+	}
+	#ifdef ENABLE_4X4_CONTROLLER
+		// Sets the sensor to be 8x8.
+		sensor_status = vl53l5cx_set_resolution(&f_dev, VL53L5CX_RESOLUTION_4X4);
+		if (sensor_status == 0) {
+			DEBUG_PRINT("VL53L5CX Initialize: Pass\n"); 
+		}
+		sensor_status = vl53l5cx_set_ranging_frequency_hz(&f_dev, 30);
+
+		if (sensor_status == 0) {
+			DEBUG_PRINT("VL53L5CX Frequency Config: Pass\n"); 
+		} 
+	#else
+		// Sets the sensor to be 8x8.
+		sensor_status = vl53l5cx_set_resolution(&f_dev, VL53L5CX_RESOLUTION_8X8);
+		if (sensor_status == 0) {
+			DEBUG_PRINT("VL53L5CX Initialize: Pass\n"); 
+		}
+		sensor_status = vl53l5cx_set_ranging_frequency_hz(&f_dev, 15);
+
+		if (sensor_status == 0) {
+			DEBUG_PRINT("VL53L5CX Frequency Config: Pass\n"); 
+		} 
+	#endif
+	//Below function should be the last called in the init. 
+	sensor_status = vl53l5cx_start_ranging(&f_dev);
+	if (sensor_status == 0) {
+		DEBUG_PRINT("VL53L5CX Initialize: Pass\n"); 
+	} 
+
+	// xReturned_ToF = xTaskCreate(
+    //                 tof_task,       /* Function that implements the task. */
+    //                 "TOF",          /* Text name for the task. */
+    //                 TOF_STACK,      /* Stack size in words, not bytes. */
+    //                 NULL,    /* Parameter passed into the task. */
+    //                 1,/* Priority at which the task is created. */
+    //                 NULL);      /* Used to pass out the created task's handle. */
+
+	vTaskDelay(M2T(100));
+	#endif
+
+	while(1) {
+		#ifdef ENABLE_4X4_CONTROLLER
+			vTaskDelay(M2T(34)); // 30Hz is roughly 30 ms intervals
+		#else
+			vTaskDelay(M2T(67)); // 15Hz is roughly 67 ms intervals
+		#endif
+		tof_task(&f_dev, &ranging_data, &sensor_status, tof_input, tof_target, tof_status);
+	}
 }
 
 void controllerOutOfTreeInit() {
@@ -130,21 +205,12 @@ void controllerOutOfTreeInit() {
 	control_nn.thrust_2 = 0.0f;
 	control_nn.thrust_3 = 0.0f;
 
-	uint8_t alive_status = vl53l5cx_is_alive(&front_sensor, &sensor_status);
+	// uint8_t alive_status
+	// sensor_status = vl53l5cx_is_alive(&f_dev, &sensor_status);
 
-	if(!sensor_status || alive_status) {
-		DEBUG_PRINT("VL53L5CX Is Not Connected!");
-	}
-	//Initialize sensor platform
-	front_sensor.platform = VL53L5CX_DEFAULT_I2C_ADDRESS;
-	uint8_t init_status = vl53l5cx_init(&front_sensor);
-	DEBUG_PRINT("VL53L5CX Initialize: %s\n", init_status ? "PASS." : "FAIL");  
-	// Sets the sensor to be 8x8.
-	uint8_t res_status = vl53l5cx_set_resolution(&front_sensor, VL53L5CX_RESOLUTION_8X8);
-	DEBUG_PRINT("VL53L5CX Set Resolution: %s\n", res_status ? "PASS." : "FAIL");  
-	//Below function should be the last called in the init. 
-	uint8_t ranging_status = vl53l5cx_start_ranging(&front_sensor);
-	DEBUG_PRINT("VL53L5CX Start Ranging: %s\n", ranging_status ? "PASS." : "FAIL");  
+	// if(!sensor_status || alive_status) {
+	// 	DEBUG_PRINT("VL53L5CX Is Alive!");
+	// }
 }
 bool controllerOutOfTreeTest() {
   // Always return true
@@ -152,10 +218,11 @@ bool controllerOutOfTreeTest() {
 }
 
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const sensorData_t *sensors, const state_t *state, const uint32_t tick) {
-  control->controlMode =  controlModeForce;
-	if (!RATE_DO_EXECUTE(/*RATE_100_HZ*/freq, tick)) {
-		return;
-	}
+
+	control->controlMode =  controlModeForce;	
+
+	float state_array[state_dim];
+	struct mat33 rot;
 
 	// Orientation
 	struct quat q = mkquat(state->attitudeQuaternion.x, 
@@ -203,7 +270,7 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[3] = rot_vel.x;
 		state_array[4] = rot_vel.y;
 		state_array[5] = rot_vel.z;
-	}	
+	}
 
 	if (relOmega) {
 		state_array[15] = omega_roll - radians(setpoint->attitudeRate.roll);
@@ -214,12 +281,81 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[16] = omega_pitch;
 		state_array[17] = omega_yaw;
 	}
-	concatTOF(&front_sensor, &ranging_data, &tof_input);
-	obstacleEmbedder(tof_input);
+
+	if (state_dim == 19) {
+		state_array[18] = state->position.z;
+	}
+	
+	//Implementation One: Use only the values of a specific column
+	// DEBUG_PRINT("TOF Controller Value: %i\n", tof_input[39]);
+	// NOTE: The ToF lens flips the image plane vertically and horizontally
+	#ifdef ENABLE_4X4_CONTROLLER
+		int row_index = 4;
+		for (int i=0;i<OBST_DIM;i++) {
+			int curr_index = row_index + i;
+			if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
+				float obst_cap;
+				obst_cap = tof_input[curr_index];
+				obst_cap = obst_cap / 1000.0f;
+
+				if ((obst_cap > OBST_MAX)) {
+					obst_cap = OBST_MAX;
+				}
+				// obstacle_inputs[i] = obst_cap;
+				obstacle_inputs[i] = OBST_MAX;
+			} else {
+				// DEBUG_PRINT("Invalid Reading!");
+				obstacle_inputs[i] = OBST_MAX;
+			}
+			// obstacle_inputs[i] = 2.0f;
+			// tof_input[i] = 2.0f;
+		}
+	#else
+	
+	if (state->position.z > SAFE_HEIGHT) {
+		int row_index = 32;
+		for (int i=0;i<8;i++) {
+			int curr_index = row_index + i;
+			if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
+				float obst_cap;
+				obst_cap = tof_input[curr_index];
+				obst_cap = obst_cap / 1000.0f;
+
+				if ((obst_cap > OBST_MAX)) {
+					obst_cap = OBST_MAX;
+				}
+				obstacle_inputs[i] = obst_cap;
+				// obstacle_inputs[i] = OBST_MAX;
+			} else {
+				// DEBUG_PRINT("Invalid Reading!");
+				obstacle_inputs[i] = OBST_MAX;
+			}
+			// obstacle_inputs[i] = 2.0f;
+			// tof_input[i] = 2.0f;
+		}	
+
+		// for (int i=0;i<OBST_DIM;i++) {
+		// 	obstacle_inputs[i] = OBST_MAX;
+		// } 
+	} else {
+		for (int i=0;i<OBST_DIM;i++) {
+			obstacle_inputs[i] = OBST_MAX;
+		}
+	}
+	#endif
+
+	// tof_input[0] = (1.0f * ranging_data.distance_mm[35])/(1000.0f);
+	// DEBUG_PRINT("TOF NN Value: %9.2f\n", tof_input[4]);
+
 	// run the neural neural network
-	uint64_t start = usecTimestamp();
+	// if (state->position.z < 0.95) {
+	// 	networkEvaluateTakeoff(&control_nn, state_array);
+	// } else {
+		// Embed the obstacles
+	obstacleEmbedder(obstacle_inputs);
 	networkEvaluate(&control_nn, state_array);
-	usec_eval = (uint32_t) (usecTimestamp() - start);
+	// }
+
 
 	// convert thrusts to normalized Thrust
 	// need to hack the firmware (stablizer.c and power_distribution_stock.c)

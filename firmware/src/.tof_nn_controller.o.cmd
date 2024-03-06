@@ -11,8 +11,24 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_intsup.h \
   /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_stdint.h \
   /usr/local/Cellar/gcc-arm-none-eabi/20200630/lib/gcc/arm-none-eabi/9.3.1/include/stdbool.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/FreeRTOS.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/string.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/_ansi.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/newlib.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/config.h \
+    $(wildcard include/config/h//.h) \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/ieeefp.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/reent.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/_ansi.h \
   /usr/local/Cellar/gcc-arm-none-eabi/20200630/lib/gcc/arm-none-eabi/9.3.1/include/stddef.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_types.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/_types.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/lock.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/cdefs.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_locale.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/strings.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/string.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/app.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/FreeRTOS.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/config/FreeRTOSConfig.h \
     $(wildcard include/config/h.h) \
     $(wildcard include/config/debug/queue/monitor.h) \
@@ -33,17 +49,6 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/list.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/math3d.h \
   /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/math.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/reent.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/_ansi.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/newlib.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/config.h \
-    $(wildcard include/config/h//.h) \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/ieeefp.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_types.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/_types.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/lock.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/cdefs.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/_ansi.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/debug.h \
     $(wildcard include/config/debug/print/on/uart1.h) \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/config/config.h \
@@ -55,14 +60,10 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/stabilizer_types.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/imu_types.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/lighthouse/lighthouse_types.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/app.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_api/vl53l5cx_api.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_api/ToFplatform.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/string.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_locale.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/strings.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/string.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/network_evaluate_tof.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/I2C_expander.h \
 
 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_nn_controller.o: $(deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_nn_controller.o)
 

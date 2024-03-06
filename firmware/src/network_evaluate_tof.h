@@ -6,8 +6,14 @@
 #include <string.h>
 #include "debug.h"
 
-#define OBST_DIM 8 // ignore this if you are using a multi-agent policy without obstacle encoder or just a single agent policy
+// When defined, uses 4x4 as ToF input with corresponding controller
+// #define ENABLE_4X4_CONTROLLER
 
+#ifdef ENABLE_4X4_CONTROLLER
+	#define OBST_DIM 4
+#else
+	#define OBST_DIM 32
+#endif
 
 /**
  * @brief Defines the output thrusts from the neural network.
@@ -33,6 +39,6 @@ void networkEvaluate(control_t_n *control_n, const float *state_array);
  * @brief Encodes the input array of ToF readings.
  * 
  */
-void obstacleEmbedder(const float obstacle_inputs[OBST_DIM]);
+void obstacleEmbedder(float obstacle_inputs[OBST_DIM]);
 
 #endif
