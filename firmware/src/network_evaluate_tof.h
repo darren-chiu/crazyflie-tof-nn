@@ -7,10 +7,10 @@
 #include "debug.h"
 
 // When defined, uses 4x4 as ToF input with corresponding controller
-// #define ENABLE_4X4_CONTROLLER
+#define ENABLE_4X4_CONTROLLER
 
 #ifdef ENABLE_4X4_CONTROLLER
-	#define OBST_DIM 4
+	#define OBST_DIM 16
 #else
 	#define OBST_DIM 32
 #endif

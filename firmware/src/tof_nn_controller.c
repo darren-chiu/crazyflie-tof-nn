@@ -45,8 +45,8 @@ static VL53L5CX_Configuration f_dev;
 static VL53L5CX_ResultsData ranging_data;
 static uint8_t sensor_status;
 
-static const float OBST_MAX = 2.0f;
-static const float SAFE_HEIGHT = 0.5f;
+static const float OBST_MAX = 3.0f;
+static const float SAFE_HEIGHT = 0.3f;
 static int state_dim = 19;
 
 /**
@@ -72,7 +72,7 @@ static uint8_t tof_status[OBST_DIM*OBST_DIM];
  * @brief The input vector seen for the obstacle encoder. 
  * 
  */
-static float obstacle_inputs[OBST_DIM] = {2.0f};
+static float obstacle_inputs[OBST_DIM] = {OBST_MAX};
 
 /**
  * @brief Scale the given V to a range from 0 to 1.
@@ -290,26 +290,33 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	// DEBUG_PRINT("TOF Controller Value: %i\n", tof_input[39]);
 	// NOTE: The ToF lens flips the image plane vertically and horizontally
 	#ifdef ENABLE_4X4_CONTROLLER
-		int row_index = 4;
-		for (int i=0;i<OBST_DIM;i++) {
-			int curr_index = row_index + i;
-			if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
-				float obst_cap;
-				obst_cap = tof_input[curr_index];
-				obst_cap = obst_cap / 1000.0f;
+		if (state->position.z > SAFE_HEIGHT) {
+			int row_index = 4;
+			for (int i=0;i<4;i++) {
+				int curr_index = row_index + i;
+				if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
+					float obst_cap;
+					obst_cap = tof_input[curr_index];
+					obst_cap = obst_cap / 1000.0f;
 
-				if ((obst_cap > OBST_MAX)) {
-					obst_cap = OBST_MAX;
+					if ((obst_cap > OBST_MAX)) {
+						obst_cap = OBST_MAX;
+					}
+					obstacle_inputs[i] = obst_cap;
+					// obstacle_inputs[i] = OBST_MAX;
+				} else {
+					// DEBUG_PRINT("Invalid Reading!");
+					obstacle_inputs[i] = OBST_MAX;
 				}
-				// obstacle_inputs[i] = obst_cap;
-				obstacle_inputs[i] = OBST_MAX;
-			} else {
-				// DEBUG_PRINT("Invalid Reading!");
+				// obstacle_inputs[i] = 2.0f;
+				// tof_input[i] = 2.0f;
+			}
+		} else {
+			for (int i=0;i<OBST_DIM;i++) {
 				obstacle_inputs[i] = OBST_MAX;
 			}
-			// obstacle_inputs[i] = 2.0f;
-			// tof_input[i] = 2.0f;
 		}
+
 	#else
 	
 	if (state->position.z > SAFE_HEIGHT) {
