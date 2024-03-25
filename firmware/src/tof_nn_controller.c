@@ -5,6 +5,9 @@
 #include "app.h"
 #include "FreeRTOS.h"
 
+#include "log.h"
+#include "param.h"
+
 #include "task.h"
 #include "math3d.h"
 
@@ -45,9 +48,13 @@ static VL53L5CX_Configuration f_dev;
 static VL53L5CX_ResultsData ranging_data;
 static uint8_t sensor_status;
 
-static const float OBST_MAX = 3.0f;
-static const float SAFE_HEIGHT = 0.3f;
-static int state_dim = 19;
+static const float OBST_MAX = 2.0f;
+static const float SAFE_HEIGHT = 0.5f;
+static int state_dim = 18;
+static int count = 0;
+
+static float state_array[18];
+static float setpoint_array[3];
 
 /**
  * @brief Defines the minimum distance of each input column of the ToF sensor. 
@@ -130,8 +137,6 @@ void tof_task(VL53L5CX_Configuration* f_dev, VL53L5CX_ResultsData* ranging_data,
 		// memcpy(tof_target, (uint8_t *)(&ranging_data->nb_target_detected[0]), OBST_DIM*OBST_DIM);
     	memcpy(tof_status, (uint8_t *)(&ranging_data->target_status[0]), OBST_DIM*OBST_DIM);
 	}
-	
-	// DEBUG_PRINT("TOF Task Value: %i\n", tof_input[36]);
 }
 
 // We still need an appMain() function, but we will not really use it. Just let it quietly sleep.
@@ -177,14 +182,6 @@ void appMain() {
 		DEBUG_PRINT("VL53L5CX Initialize: Pass\n"); 
 	} 
 
-	// xReturned_ToF = xTaskCreate(
-    //                 tof_task,       /* Function that implements the task. */
-    //                 "TOF",          /* Text name for the task. */
-    //                 TOF_STACK,      /* Stack size in words, not bytes. */
-    //                 NULL,    /* Parameter passed into the task. */
-    //                 1,/* Priority at which the task is created. */
-    //                 NULL);      /* Used to pass out the created task's handle. */
-
 	vTaskDelay(M2T(100));
 	#endif
 
@@ -218,10 +215,10 @@ bool controllerOutOfTreeTest() {
 }
 
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const sensorData_t *sensors, const state_t *state, const uint32_t tick) {
+	DANGER_FLAG = false;
 
-	control->controlMode =  controlModeForce;	
+	control->controlMode = controlModeForce;	
 
-	float state_array[state_dim];
 	struct mat33 rot;
 
 	// Orientation
@@ -236,9 +233,21 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	float omega_pitch = radians(sensors->gyro.y);
 	float omega_yaw = radians(sensors->gyro.z);
 
-	state_array[0] = state->position.x - setpoint->position.x;
-	state_array[1] = state->position.y - setpoint->position.y;
-	state_array[2] = state->position.z - setpoint->position.z;
+	setpoint_array[0] = setpoint->position.x;
+	setpoint_array[1] = setpoint->position.y;
+	setpoint_array[2] = setpoint->position.z;
+
+	state_array[0] = state->position.x - setpoint_array[0];
+	state_array[1] = state->position.y - setpoint_array[1];
+	state_array[2] = state->position.z - setpoint_array[2];
+
+	if (count == 500) {
+		DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
+		DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
+		count = 0;
+	}
+	count++;
+
 	if (relVel) {
 		state_array[3] = state->velocity.x - setpoint->velocity.x;
 		state_array[4] = state->velocity.y - setpoint->velocity.y;
@@ -290,10 +299,12 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	// DEBUG_PRINT("TOF Controller Value: %i\n", tof_input[39]);
 	// NOTE: The ToF lens flips the image plane vertically and horizontally
 	#ifdef ENABLE_4X4_CONTROLLER
+		// ToF Measurements are noisy on takeoff. 
 		if (state->position.z > SAFE_HEIGHT) {
 			int row_index = 4;
-			for (int i=0;i<4;i++) {
+			for (int i=0;i<OBST_DIM;i++) {
 				int curr_index = row_index + i;
+				// Check if the pixels are valid 
 				if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
 					float obst_cap;
 					obst_cap = tof_input[curr_index];
@@ -351,18 +362,8 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	}
 	#endif
 
-	// tof_input[0] = (1.0f * ranging_data.distance_mm[35])/(1000.0f);
-	// DEBUG_PRINT("TOF NN Value: %9.2f\n", tof_input[4]);
-
-	// run the neural neural network
-	// if (state->position.z < 0.95) {
-	// 	networkEvaluateTakeoff(&control_nn, state_array);
-	// } else {
-		// Embed the obstacles
 	obstacleEmbedder(obstacle_inputs);
 	networkEvaluate(&control_nn, state_array);
-	// }
-
 
 	// convert thrusts to normalized Thrust
 	// need to hack the firmware (stablizer.c and power_distribution_stock.c)
@@ -381,3 +382,15 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		control->normalizedForces[3] = iThrust_3;
 	}
 }
+
+PARAM_GROUP_START(ctrlNN)
+
+LOG_ADD(LOG_FLOAT, state_x, &state_array[0])
+LOG_ADD(LOG_FLOAT, state_y, &state_array[1])
+LOG_ADD(LOG_FLOAT, state_z, &state_array[2])
+
+LOG_ADD(LOG_FLOAT, set_x, &setpoint_array[0])
+LOG_ADD(LOG_FLOAT, set_y, &setpoint_array[1])
+LOG_ADD(LOG_FLOAT, set_z, &setpoint_array[2])
+
+LOG_GROUP_STOP(ctrlNN)

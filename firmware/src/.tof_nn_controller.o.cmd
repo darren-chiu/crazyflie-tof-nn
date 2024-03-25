@@ -45,6 +45,11 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/deprecated_definitions.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/portable/GCC/ARM_CM4F/portmacro.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/mpu_wrappers.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/log.h \
+    $(wildcard include/config/debug/log/enable.h) \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/param.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/param_logic.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/crtp.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/task.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/list.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/math3d.h \

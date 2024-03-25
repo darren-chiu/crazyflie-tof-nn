@@ -1,5 +1,5 @@
-#ifndef __NETWORK_EVALUATE_H__
-#define __NETWORK_EVALUATE_H__
+#ifndef __NETWORK_EVALUATE_TOF_H__
+#define __NETWORK_EVALUATE_TOF_H__
 
 #include <math.h>
 #include <stdbool.h>
@@ -8,6 +8,7 @@
 
 // When defined, uses 4x4 as ToF input with corresponding controller
 #define ENABLE_4X4_CONTROLLER
+
 
 #ifdef ENABLE_4X4_CONTROLLER
 	#define OBST_DIM 16

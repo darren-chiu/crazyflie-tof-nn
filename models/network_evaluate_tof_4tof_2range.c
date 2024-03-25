@@ -2,7 +2,7 @@
 #include "network_evaluate_tof.h"
 #include <string.h>
 
-#define D_MODEL 32
+#define D_MODEL 16
 #define NUM_TOKENS 2
 #define EPS 0.000001 // 1e-6
 
