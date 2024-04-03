@@ -16,9 +16,7 @@
 
 // When defined, enables the ToF module.
 #define TOF_ENABLE 
-
-// (11 Bytes + 16 bytes + 4bytes*8) / 2 = 30. 60 For assurance
-// #define TOF_STACK 2*(configMINIMAL_STACK_SIZE)
+// #define DEBUG_LOCALIZATION
 
 // Crazyflie Incldues
 #include "debug.h"
@@ -28,7 +26,6 @@
 // Custom Includes
 #include "vl53l5cx_api.h"
 #include "network_evaluate_tof.h"
-// #include "network_evaluate_takeoff.h"
 #include "I2C_expander.h"
 
 // #define MAX_THRUST 0.15f
@@ -79,7 +76,7 @@ static uint8_t tof_status[OBST_DIM*OBST_DIM];
  * @brief The input vector seen for the obstacle encoder. 
  * 
  */
-static float obstacle_inputs[OBST_DIM] = {OBST_MAX};
+static float obstacle_inputs[OBST_DIM];
 
 /**
  * @brief Scale the given V to a range from 0 to 1.
@@ -210,12 +207,16 @@ void controllerOutOfTreeInit() {
 	// }
 }
 bool controllerOutOfTreeTest() {
-  // Always return true
-  return true;
+  	// Always return true
+	// Initialize starting obs as max value
+	for (int i=0;i<OBST_DIM;i++) {
+		obstacle_inputs[i] = 2.0f;
+	}
+
+	return true;
 }
 
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const sensorData_t *sensors, const state_t *state, const uint32_t tick) {
-	DANGER_FLAG = false;
 
 	control->controlMode = controlModeForce;	
 
@@ -237,16 +238,19 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	setpoint_array[1] = setpoint->position.y;
 	setpoint_array[2] = setpoint->position.z;
 
-	state_array[0] = state->position.x - setpoint_array[0];
-	state_array[1] = state->position.y - setpoint_array[1];
-	state_array[2] = state->position.z - setpoint_array[2];
-
-	if (count == 500) {
-		DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
-		DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
-		count = 0;
-	}
-	count++;
+	state_array[0] = state->position.x - setpoint->position.x;
+	state_array[1] = state->position.y - setpoint->position.y;
+	state_array[2] = state->position.z - setpoint->position.z;
+	
+	#ifdef DEBUG_LOCALIZATION
+		if (count == 500) {
+			DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
+			DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
+			DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
+			count = 0;
+		}
+		count++;
+	#endif
 
 	if (relVel) {
 		state_array[3] = state->velocity.x - setpoint->velocity.x;
@@ -302,7 +306,8 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		// ToF Measurements are noisy on takeoff. 
 		if (state->position.z > SAFE_HEIGHT) {
 			int row_index = 4;
-			for (int i=0;i<OBST_DIM;i++) {
+			// NOTE: THIS ONLY ITERATES THROUGH THE FIRST 4 OBSERVATIONS
+			for (int i=0;i<4;i++) {
 				int curr_index = row_index + i;
 				// Check if the pixels are valid 
 				if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
@@ -314,13 +319,11 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 						obst_cap = OBST_MAX;
 					}
 					obstacle_inputs[i] = obst_cap;
-					// obstacle_inputs[i] = OBST_MAX;
+					// obstacle_inputs[i] = OBST_MAX; //Ablate inputs to NN
 				} else {
 					// DEBUG_PRINT("Invalid Reading!");
 					obstacle_inputs[i] = OBST_MAX;
 				}
-				// obstacle_inputs[i] = 2.0f;
-				// tof_input[i] = 2.0f;
 			}
 		} else {
 			for (int i=0;i<OBST_DIM;i++) {
@@ -366,7 +369,6 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	networkEvaluate(&control_nn, state_array);
 
 	// convert thrusts to normalized Thrust
-	// need to hack the firmware (stablizer.c and power_distribution_stock.c)
 	int iThrust_0, iThrust_1, iThrust_2, iThrust_3; 
 	normalizeThrust(&control_nn, &iThrust_0, &iThrust_1, &iThrust_2, &iThrust_3);
 
@@ -383,11 +385,7 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	}
 }
 
-PARAM_GROUP_START(ctrlNN)
-
-LOG_ADD(LOG_FLOAT, state_x, &state_array[0])
-LOG_ADD(LOG_FLOAT, state_y, &state_array[1])
-LOG_ADD(LOG_FLOAT, state_z, &state_array[2])
+LOG_GROUP_START(ctrlNN)
 
 LOG_ADD(LOG_FLOAT, set_x, &setpoint_array[0])
 LOG_ADD(LOG_FLOAT, set_y, &setpoint_array[1])
