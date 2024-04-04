@@ -26,6 +26,7 @@
 // Custom Includes
 #include "vl53l5cx_api.h"
 #include "network_evaluate_tof.h"
+#include "network_evaluate_takeoff.h"
 #include "I2C_expander.h"
 
 // #define MAX_THRUST 0.15f
@@ -46,7 +47,8 @@ static VL53L5CX_ResultsData ranging_data;
 static uint8_t sensor_status;
 
 static const float OBST_MAX = 2.0f;
-static const float SAFE_HEIGHT = 0.5f;
+static const float DANGER_DIST = 0.5f;
+static const float SAFE_HEIGHT = 0.25f;
 static int state_dim = 18;
 static int count = 0;
 
@@ -241,7 +243,7 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	state_array[0] = state->position.x - setpoint->position.x;
 	state_array[1] = state->position.y - setpoint->position.y;
 	state_array[2] = state->position.z - setpoint->position.z;
-	
+
 	#ifdef DEBUG_LOCALIZATION
 		if (count == 500) {
 			DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
@@ -366,7 +368,8 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	#endif
 
 	obstacleEmbedder(obstacle_inputs);
-	networkEvaluate(&control_nn, state_array);
+	// networkEvaluate(&control_nn, state_array);
+	networkEvaluateTakeoff(&control_nn, state_array);
 
 	// convert thrusts to normalized Thrust
 	int iThrust_0, iThrust_1, iThrust_2, iThrust_3; 

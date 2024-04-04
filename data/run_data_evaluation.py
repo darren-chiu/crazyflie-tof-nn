@@ -244,9 +244,9 @@ def calc_error(data):
 # # plot_traj(data, direcotry)
 # plot_error(data, directory)
 
-for folder in ['simstep4_16']:
+for folder in ['random']:
     print(f'Evaluating on data {folder}...')
-    for data_file in ['00', '02', '01', '03', '04','05']:
+    for data_file in ['05']:
         filename = os.path.join(folder, "log" + data_file)
         print(filename)
         data = decode(filename)["fixedFrequency"]

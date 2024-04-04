@@ -37,6 +37,11 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/console.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/eprintf.h \
   /usr/local/Cellar/gcc-arm-none-eabi/20200630/lib/gcc/arm-none-eabi/9.3.1/include/stdarg.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/network_evaluate_tof.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/string.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_locale.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/strings.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/string.h \
 
 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/network_evaluate_takeoff.o: $(deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/network_evaluate_takeoff.o)
 
