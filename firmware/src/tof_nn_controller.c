@@ -16,7 +16,7 @@
 
 // When defined, enables the ToF module.
 #define TOF_ENABLE 
-// #define DEBUG_LOCALIZATION
+#define DEBUG_LOCALIZATION
 
 // Crazyflie Incldues
 #include "debug.h"
@@ -25,20 +25,9 @@
 
 // Custom Includes
 #include "vl53l5cx_api.h"
+// #include "network_evaluate_takeoff.h"
 #include "network_evaluate_tof.h"
-#include "network_evaluate_takeoff.h"
 #include "I2C_expander.h"
-
-// #define MAX_THRUST 0.15f
-// PWM to thrust coefficients
-#define A 2.130295e-11f
-#define B 1.032633e-6f
-#define C 5.484560e-4f
-
-// static float maxThrustFactor = 0.70f;
-static bool relVel = false;
-static bool relOmega = false;
-static bool relXYZ = false;
 
 static control_t_n control_nn;
 
@@ -46,14 +35,33 @@ static VL53L5CX_Configuration f_dev;
 static VL53L5CX_ResultsData ranging_data;
 static uint8_t sensor_status;
 
+// Obstacle Avoidance Parameters
 static const float OBST_MAX = 2.0f;
 static const float DANGER_DIST = 0.5f;
-static const float SAFE_HEIGHT = 0.25f;
-static int state_dim = 18;
-static int count = 0;
+static bool DANGER_FLAG = false;
+static const float SAFE_HEIGHT = 0.5f;
 
+// Dynamics Parameters
+static int state_dim = 18;
 static float state_array[18];
-static float setpoint_array[3];
+static float setpoint_array[6];
+// static float maxThrustFactor = 0.70f;
+static bool relVel = false;
+static bool relOmega = false;
+static bool relXYZ = false;
+
+//Parameter Estimation
+static int p_error = 1;
+
+// PWM to thrust coefficients
+#define A 2.130295e-11f
+#define B 1.032633e-6f
+#define C 5.484560e-4f
+
+// Debugging Parameters
+static int count = 0;
+static float thrust_coefficient = 0;
+
 
 /**
  * @brief Defines the minimum distance of each input column of the ToF sensor. 
@@ -78,7 +86,7 @@ static uint8_t tof_status[OBST_DIM*OBST_DIM];
  * @brief The input vector seen for the obstacle encoder. 
  * 
  */
-static float obstacle_inputs[OBST_DIM];
+static float obstacle_inputs[OBST_DIM] = {2.0f};
 
 /**
  * @brief Scale the given V to a range from 0 to 1.
@@ -210,16 +218,13 @@ void controllerOutOfTreeInit() {
 }
 bool controllerOutOfTreeTest() {
   	// Always return true
-	// Initialize starting obs as max value
-	for (int i=0;i<OBST_DIM;i++) {
-		obstacle_inputs[i] = 2.0f;
-	}
 
 	return true;
 }
 
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const sensorData_t *sensors, const state_t *state, const uint32_t tick) {
 
+	DANGER_FLAG = false;
 	control->controlMode = controlModeForce;	
 
 	struct mat33 rot;
@@ -246,9 +251,11 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 
 	#ifdef DEBUG_LOCALIZATION
 		if (count == 500) {
-			DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
-			DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
-			DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
+			DEBUG_PRINT("Estimation: (%f,%f,%f,%f)\n", state->position.x,state->position.y,state->position.z, thrust_coefficient);
+			// DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
+			// DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
+			DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[0], obstacle_inputs[1], obstacle_inputs[2], obstacle_inputs[3]);
+			// DEBUG_PRINT("Thrusts: (%i,%i,%i,%i)\n", control->normalizedForces[0], control->normalizedForces[1], control->normalizedForces[2], control->normalizedForces[3]);
 			count = 0;
 		}
 		count++;
@@ -287,10 +294,14 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[5] = rot_vel.z;
 	}
 
+	setpoint_array[3] = radians(setpoint->attitudeRate.roll);
+	setpoint_array[4] = radians(setpoint->attitudeRate.pitch);
+	setpoint_array[5] = radians(setpoint->attitudeRate.yaw);
+
 	if (relOmega) {
-		state_array[15] = omega_roll - radians(setpoint->attitudeRate.roll);
-		state_array[16] = omega_pitch - radians(setpoint->attitudeRate.pitch);
-		state_array[17] = omega_yaw - radians(setpoint->attitudeRate.yaw);
+		state_array[15] = omega_roll - setpoint_array[4];
+		state_array[16] = omega_pitch - setpoint_array[5];
+		state_array[17] = omega_yaw - setpoint_array[6];
 	} else {
 		state_array[15] = omega_roll;
 		state_array[16] = omega_pitch;
@@ -305,25 +316,30 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	// DEBUG_PRINT("TOF Controller Value: %i\n", tof_input[39]);
 	// NOTE: The ToF lens flips the image plane vertically and horizontally
 	#ifdef ENABLE_4X4_CONTROLLER
-		// ToF Measurements are noisy on takeoff. 
+		// ToF Measurements are noisy on takeoff.
 		if (state->position.z > SAFE_HEIGHT) {
 			int row_index = 4;
 			// NOTE: THIS ONLY ITERATES THROUGH THE FIRST 4 OBSERVATIONS
-			for (int i=0;i<4;i++) {
-				int curr_index = row_index + i;
-				// Check if the pixels are valid 
-				if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
-					float obst_cap;
-					obst_cap = tof_input[curr_index];
-					obst_cap = obst_cap / 1000.0f;
+			for (int i=0;i<OBST_DIM;i++) {
+				if (i < 4) { // Only modify the first four inputs 
+					int curr_index = row_index + i;
+					// Check if the pixels are valid 
+					if ((tof_status[curr_index] == 9) || (tof_status[curr_index] == 5)) {
+						float obst_cap;
 
-					if ((obst_cap > OBST_MAX)) {
-						obst_cap = OBST_MAX;
+						obst_cap = tof_input[curr_index] * 1.0f;
+						obst_cap = obst_cap / 1000.0f;
+
+						if ((obst_cap > OBST_MAX)) {
+							obst_cap = OBST_MAX;
+						}
+						obstacle_inputs[i] = obst_cap;
+						// obstacle_inputs[i] = OBST_MAX; //Ablate inputs to NN
+					} else {
+						// DEBUG_PRINT("Invalid Reading!");
+						obstacle_inputs[i] = OBST_MAX;
 					}
-					obstacle_inputs[i] = obst_cap;
-					// obstacle_inputs[i] = OBST_MAX; //Ablate inputs to NN
 				} else {
-					// DEBUG_PRINT("Invalid Reading!");
 					obstacle_inputs[i] = OBST_MAX;
 				}
 			}
@@ -366,10 +382,12 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		}
 	}
 	#endif
-
+	// if (DANGER_FLAG && (state->position.z > SAFE_HEIGHT)) {
 	obstacleEmbedder(obstacle_inputs);
-	// networkEvaluate(&control_nn, state_array);
-	networkEvaluateTakeoff(&control_nn, state_array);
+	networkEvaluate(&control_nn, state_array);
+	// } else {
+		// networkEvaluateTakeoff(&control_nn, state_array);
+	// }
 
 	// convert thrusts to normalized Thrust
 	int iThrust_0, iThrust_1, iThrust_2, iThrust_3; 
@@ -381,6 +399,11 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		control->normalizedForces[2] = 0;
 		control->normalizedForces[3] = 0;
 	} else {
+		// thrust_coefficient = -1*(state_array[2] * p_error);
+		// thrust_coefficient = 1.05;
+		// thrust_coefficient = 2.0;
+		thrust_coefficient = 1.05;
+		// thrust_coefficient = 4500;
 		control->normalizedForces[0] = iThrust_0;
 		control->normalizedForces[1] = iThrust_1;
 		control->normalizedForces[2] = iThrust_2;
@@ -393,5 +416,12 @@ LOG_GROUP_START(ctrlNN)
 LOG_ADD(LOG_FLOAT, set_x, &setpoint_array[0])
 LOG_ADD(LOG_FLOAT, set_y, &setpoint_array[1])
 LOG_ADD(LOG_FLOAT, set_z, &setpoint_array[2])
+
+
+LOG_ADD(LOG_FLOAT, obs1, &obstacle_inputs[0])
+LOG_ADD(LOG_FLOAT, obs2, &obstacle_inputs[1])
+LOG_ADD(LOG_FLOAT, obs3, &obstacle_inputs[2])
+LOG_ADD(LOG_FLOAT, obs4, &obstacle_inputs[3])
+
 
 LOG_GROUP_STOP(ctrlNN)

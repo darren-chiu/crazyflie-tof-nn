@@ -88,9 +88,9 @@ def decode(filename):
             del result[event_name]
 
     # convert to numpy arrays
-    for event_name in result.keys():
-        for var_name in result[event_name]:
-            result[event_name][var_name] = np.array(result[event_name][var_name])
+    # for event_name in result.keys():
+    #     for var_name in result[event_name]:
+    #         result[event_name][var_name] = np.array(result[event_name][var_name])
 
     return result
 
@@ -102,17 +102,6 @@ def toCSV(data, filename):
     # Determine the number of rows in the CSV (based on the length of arrays)
     num_rows = len(arrays[0])
 
-    # Create CSV file and write data
-    with open('output_columns.csv', mode='w', newline='') as file:
-        writer = csv.writer(file)
-        
-        # Write header row
-        writer.writerow(keys)
-        
-        # Write data rows
-        for i in range(num_rows):
-            row = [array[i] for array in arrays]
-            writer.writerow(row)
 
 
 if __name__ == "__main__":
@@ -120,6 +109,6 @@ if __name__ == "__main__":
     parser.add_argument("filename")
     args = parser.parse_args()
     data = decode(args.filename)
-    print(type(data))
+    # print(type(data))
     toCSV(data["fixedFrequency"], args.filename)
-    print(data["fixedFrequency"])
+    # print(data["fixedFrequency"])
