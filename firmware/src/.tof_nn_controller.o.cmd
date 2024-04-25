@@ -65,10 +65,10 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/stabilizer_types.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/imu_types.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/lighthouse/lighthouse_types.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/obst_daq.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_api/vl53l5cx_api.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_api/ToFplatform.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/network_evaluate_tof.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/I2C_expander.h \
 
 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_nn_controller.o: $(deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_nn_controller.o)
 

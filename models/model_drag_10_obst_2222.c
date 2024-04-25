@@ -1,25 +1,6 @@
 
-#include <random>
-#include <vector>
-#include <iostream>
-#include <algorithm>
-#include <cstring> 
-
-
-typedef struct control_t_n {
-	float thrust_0;
-	float thrust_1;
-	float thrust_2;
-	float thrust_3;
-} control_t_n;
-
-void networkEvaluate(control_t_n* control_n, const float* state_array);
-
-static const int NEIGHBORS = 0;
-static const int NBR_DIM = 0; 
-
-static const int NUM_OBSTACLES = 2; 
-static const int OBST_DIM = 8;
+#include "network_evaluate_tof.h"
+#include <string.h>
 
 
 #define EPS 0.000001 // 1e-6
@@ -123,27 +104,4 @@ void obstacleEmbedder(float obstacle_inputs[OBST_DIM]) {
             obstacle_embeds[i] = tanhf(obst_output_1[i]);
         }
         }
-
-
-
-int main(const float *self_indatav, float *obst_indatav, float *obst_outdata, float *outdatav)
-{
-    size_t i;
-    control_t_n motorThrusts;
-
-    obstacleEmbedder(obst_indatav);
-
-    for (int i = 0; i < D_MODEL; i++) {
-        obst_outdata[i] = obstacle_embeds[i];
-    }
-
-    networkEvaluate(&motorThrusts, self_indatav);
-
-    outdatav[0] = motorThrusts.thrust_0;
-    outdatav[1] = motorThrusts.thrust_1;
-    outdatav[2] = motorThrusts.thrust_2;
-    outdatav[3] = motorThrusts.thrust_3;
-
-    return EXIT_SUCCESS; 
-}
 
