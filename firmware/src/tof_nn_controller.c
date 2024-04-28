@@ -1,3 +1,15 @@
+/**
+ * @file tof_nn_controller.c
+ * @author Darren Chiu (chiudarr@usc.edu)
+ * @brief 
+ * @version 0.1
+ * @date 2024-04-25
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ * 
+ * TODO: 1. Check overload in RTOS queue. 
+ */
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
@@ -17,7 +29,7 @@
 #include "controller.h"
 #include "stabilizer_types.h"
 #include "obst_daq.h"
-
+#include "p2p_state.h"
 #include "network_evaluate_tof.h"
 
 // Edit the debug name to get nice debug prints
@@ -26,6 +38,7 @@
 // Output from the neural network.
 static control_t_n control_nn;
 
+// Observations
 static uint8_t sensor_status;
 static VL53L5CX_Configuration tof_array[NUM_SENSORS];
 static VL53L5CX_ResultsData ranging_data[NUM_SENSORS];
@@ -33,6 +46,24 @@ static uint16_t tof_addresses[NUM_SENSORS] = {0x40, 0x44, 0x48, 0x50};
 
 // Bool that tracks when the obstacle embedder needs to be updated.
 static bool isStale = false;
+
+// Neighbor Observations
+#ifdef MULTI_DRONE_ENABLE
+	static dtrTopology topology = NETWORK_TOPOLOGY;
+	static uint8_t self_id;
+	static uint8_t comm_tick = 0;
+	static uint8_t comm_freq = 1000;
+	// Tracks the distances between self and the N nearest drones (N=NUM_NEIGHBORS)
+	static float rel_distance[NUM_NEIGHBORS] = {10000.0f};
+
+	// This would be the input into the attention network
+	#ifdef ENABLE_NEIGHBOR_REL_VEL
+		static float neighbor_array[6*NEIGHBOR_ATTENTION] = {10000.0f};
+	#else
+		static float neighbor_array[3*NEIGHBOR_ATTENTION] = {10000.0f};
+	#endif
+
+#endif
 
 // Dynamics Parameters
 static float state_array[STATE_DIM];
@@ -42,7 +73,7 @@ static float setpoint_array[6];
 #ifdef DEBUG_LOCALIZATION
 	static int count = 0;
 #endif
-static float thrust_coefficient = 0;
+static float thrust_coefficient = 1.0;
 
 
 /**
@@ -62,7 +93,7 @@ static uint8_t tof_status[NUM_SENSORS * OBST_DIM];
  * @brief The input vector seen for the obstacle encoder. 
  * 
  */
-static float obstacle_inputs[OBST_DIM] = {2.0f};
+static float obstacle_inputs[OBST_DIM];
 
 /**
  * @brief Scale the given V to a range from 0 to 1.
@@ -106,7 +137,7 @@ void normalizeThrust(control_t_n *control_nn, uint16_t *PWM_0, uint16_t *PWM_1, 
     *PWM_3 = UINT16_MAX * clip(scale(control_nn->thrust_3), 0.0, 1.0);
 }
 
-void appMain() {
+void appMain() {	
 	//Initialize sensor platform
 	#ifdef TOF_ENABLE
 	tof_init(&sensor_status, tof_array, tof_addresses);
@@ -114,13 +145,18 @@ void appMain() {
 	vTaskDelay(M2T(100));
 	#endif
 
+	// Network Initialization
+	self_id = network_init(topology, rel_distance);
+
 	while(1) {
 		#ifdef ENABLE_4X4_CONTROLLER
 			vTaskDelay(M2T(34)); // 30Hz is roughly 30 ms intervals
 		#else
 			vTaskDelay(M2T(67)); // 15Hz is roughly 67 ms intervals
 		#endif
-		isStale = tof_task(tof_array, ranging_data, &sensor_status, (uint16_t* )tof_input, (uint8_t* ) tof_status);
+		#ifdef TOF_ENABLE
+			isStale = tof_task(tof_array, ranging_data, &sensor_status, (uint16_t* )tof_input, (uint8_t* ) tof_status);
+		#endif
 	}
 }
 
@@ -131,12 +167,6 @@ void controllerOutOfTreeInit() {
 	control_nn.thrust_2 = 0.0f;
 	control_nn.thrust_3 = 0.0f;
 
-	// uint8_t alive_status
-	// sensor_status = vl53l5cx_is_alive(&f_dev, &sensor_status);
-
-	// if(!sensor_status || alive_status) {
-	// 	DEBUG_PRINT("VL53L5CX Is Alive!");
-	// }
 }
 bool controllerOutOfTreeTest() {
   	// Always return true
@@ -145,7 +175,14 @@ bool controllerOutOfTreeTest() {
 }
 
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const sensorData_t *sensors, const state_t *state, const uint32_t tick) {
-	control->controlMode = controlModeForce;	
+	control->controlMode = controlModeForce;
+	bool comm_status;
+	comm_tick++;
+	if (comm_tick == comm_freq) {
+		comm_status = broadcastState(self_id, state);
+		updateNeighborData(self_id, rel_distance, state, neighbor_array);
+		comm_tick = 0;
+	}
 
 	struct mat33 rot;
 
@@ -190,6 +227,7 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[4] = state->velocity.y;
 		state_array[5] = state->velocity.z;
 	}
+	// TODO: ADD RELATIVE ROTATION MATRIX
 	state_array[6] = rot.m[0][0];
 	state_array[7] = rot.m[0][1];
 	state_array[8] = rot.m[0][2];
@@ -229,9 +267,12 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	}
 
 	if (!isStale) {
-		isStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
-		obstacleEmbedder(obstacle_inputs);
+		#ifdef TOF_ENABLE
+			isStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
+			obstacleEmbedder(obstacle_inputs);
+		#endif
 	}
+
 	networkEvaluate(&control_nn, state_array);
 
 

@@ -69,6 +69,37 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_api/vl53l5cx_api.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_api/ToFplatform.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/network_evaluate_tof.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/p2p_state.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/stdio.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/types.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/endian.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/_endian.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/select.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_sigset.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_timeval.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/timespec.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_timespec.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/_pthreadtypes.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/sched.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/types.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/sys/stdio.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/radiolink.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/syslink.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/configblock.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/token_ring.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/timers.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/task.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/DTR_types.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/DTR_handlers.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/stdlib.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/stdlib.h \
+  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/alloca.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/token_ring.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/DTR_p2p_interface.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/queueing.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/queue.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/queuemonitor.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/static_mem.h \
 
 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_nn_controller.o: $(deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/tof_nn_controller.o)
 

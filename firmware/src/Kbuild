@@ -1,5 +1,5 @@
 obj-y += tof_nn_controller.o
 obj-y += network_evaluate_tof.o
 obj-y += obst_daq.o
-obj-y += I2C_expander.o
+obj-y += p2p_state.o
 obj-y += tof_api/

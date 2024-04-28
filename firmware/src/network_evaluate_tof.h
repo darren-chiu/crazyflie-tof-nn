@@ -6,15 +6,25 @@
 #include <string.h>
 #include "debug.h"
 // When defined, enables the ToF module.
-#define TOF_ENABLE 
+// #define TOF_ENABLE 
+// Enable print statements
 // #define DEBUG_LOCALIZATION
 
+// Enable print statements for communication
+#define DEBUG_COMMUNICATION
+
+//Enable Multi Drone
+#define MULTI_DRONE_ENABLE
 // When defined, uses 4x4 as ToF input with corresponding controller
 #define ENABLE_4X4_CONTROLLER
 // Defines the dynamics dimmensions
 #define STATE_DIM 18
 // The number of ToF sensors to be used
 #define NUM_SENSORS 4
+// Number of TOTAL drones (this includes yourself)
+#define NUM_NEIGHBORS 2
+// Number of drones to consider. This determines the N nearest drones (where N is NEIGHBOR_ATTENTION)
+#define NEIGHBOR_ATTENTION 2
 
 // Obstacle Avoidance Parameters
 #define OBST_MAX 2.0f
@@ -29,6 +39,7 @@
 #define REL_VEL false
 #define REL_OMEGA false
 #define REL_XYZ false
+
 
 /**
  * @brief Defines the output thrusts from the neural network.
