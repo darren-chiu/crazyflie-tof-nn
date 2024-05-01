@@ -25,6 +25,9 @@
 #define NUM_NEIGHBORS 2
 // Number of drones to consider. This determines the N nearest drones (where N is NEIGHBOR_ATTENTION)
 #define NEIGHBOR_ATTENTION 2
+//Size of the neighbor encoder for the network
+#define NEIGHBORS 2
+#define NBR_OBS_DIM 6
 
 // Obstacle Avoidance Parameters
 #define OBST_MAX 2.0f

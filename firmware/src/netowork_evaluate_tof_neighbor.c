@@ -1,10 +1,11 @@
-#include "network_evaluate.h"
+#include "network_evaluate_tof.h"
+
 
 static const int self_structure [4][2] = {{18, 16},{16, 16},{24, 32},{32, 4}};
 static const int nbr_structure [2][2] = {{3, 8},{8, 8}};
 
-static const int D_SELF = self_structure[1][1];
-static const int D_NBR = nbr_structure[1][1];
+static const int D_SELF = 16; // self_structure[1][1]
+static const int D_NBR = nbr_structure[1][1]; //nbr_structure[1][1]
 
 static float neighbor_embeds[D_NBR];
 static float output_embeds[D_SELF + D_NBR];

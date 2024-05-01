@@ -72,7 +72,7 @@ static float setpoint_array[6];
 #ifdef DEBUG_LOCALIZATION
 	static int count = 0;
 #endif
-static float thrust_coefficient = 1.05;
+static float thrust_coefficient = 1.0;
 
 
 /**

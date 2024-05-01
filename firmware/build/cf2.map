@@ -14647,14 +14647,14 @@ LOAD /usr/local/Cellar/gcc-arm-none-eabi/20200630/bin/../lib/gcc/arm-none-eabi/9
  .debug_frame   0x000000000001af18       0x20 /usr/local/Cellar/gcc-arm-none-eabi/20200630/bin/../lib/gcc/arm-none-eabi/9.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libnosys.a(sbrk.o)
  .debug_frame   0x000000000001af38       0x20 /usr/local/Cellar/gcc-arm-none-eabi/20200630/bin/../lib/gcc/arm-none-eabi/9.3.1/../../../../arm-none-eabi/lib/thumb/v7e-m+fp/hard/libnosys.a(write.o)
 
-.debug_str      0x0000000000000000    0xf8bd9
+.debug_str      0x0000000000000000    0xf8be7
  *(.debug_str)
  .debug_str     0x0000000000000000    0xe5cd6 src/built-in.o
                                     0x3b21ba5 (size before relaxing)
  .debug_str     0x00000000000e5cd6    0x11292 vendor/built-in.o
                                      0xa71ab5 (size before relaxing)
- .debug_str     0x00000000000f6f68     0x1c71 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
-                                     0x174019 (size before relaxing)
+ .debug_str     0x00000000000f6f68     0x1c7f /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
+                                     0x174081 (size before relaxing)
 
 .debug_loc      0x0000000000000000    0x497cc
  *(.debug_loc)
@@ -14687,7 +14687,7 @@ LOAD /usr/local/Cellar/gcc-arm-none-eabi/20200630/bin/../lib/gcc/arm-none-eabi/9
  .debug_ranges  0x000000000000f148     0x3888 vendor/built-in.o
  .debug_ranges  0x00000000000129d0      0x5a0 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
 
-.debug_macro    0x0000000000000000    0x6b0a8
+.debug_macro    0x0000000000000000    0x6b0c0
  .debug_macro   0x0000000000000000    0x2b916 src/built-in.o
  .debug_macro   0x000000000002b916      0xb2c src/built-in.o
  .debug_macro   0x000000000002c442       0x22 src/built-in.o
@@ -14974,10 +14974,10 @@ LOAD /usr/local/Cellar/gcc-arm-none-eabi/20200630/bin/../lib/gcc/arm-none-eabi/9
  .debug_macro   0x00000000000697e4     0x15c9 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
  .debug_macro   0x000000000006adad       0x3a /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
  .debug_macro   0x000000000006ade7      0x1d3 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
- .debug_macro   0x000000000006afba       0x58 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
- .debug_macro   0x000000000006b012       0x10 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
- .debug_macro   0x000000000006b022       0x52 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
- .debug_macro   0x000000000006b074       0x34 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
+ .debug_macro   0x000000000006afba       0x64 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
+ .debug_macro   0x000000000006b01e       0x10 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
+ .debug_macro   0x000000000006b02e       0x5e /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
+ .debug_macro   0x000000000006b08c       0x34 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/built-in.o
 
 Cross Reference Table
 
