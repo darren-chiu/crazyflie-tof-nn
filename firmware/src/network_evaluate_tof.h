@@ -6,12 +6,12 @@
 #include <string.h>
 #include "debug.h"
 // When defined, enables the ToF module.
-// #define TOF_ENABLE 
+#define TOF_ENABLE 
 // Enable print statements
 // #define DEBUG_LOCALIZATION
 
 // Enable print statements for communication
-#define DEBUG_COMMUNICATION
+// #define DEBUG_COMMUNICATION
 
 //Enable Multi Drone
 #define MULTI_DRONE_ENABLE

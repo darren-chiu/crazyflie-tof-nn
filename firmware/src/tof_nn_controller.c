@@ -25,7 +25,7 @@
 
 
 // Crazyflie Incldues
-#include "debug.h"
+#include "debug.h" 
 #include "controller.h"
 #include "stabilizer_types.h"
 #include "obst_daq.h"
@@ -40,9 +40,8 @@ static control_t_n control_nn;
 
 // Observations
 static uint8_t sensor_status;
-static VL53L5CX_Configuration tof_array[NUM_SENSORS];
-static VL53L5CX_ResultsData ranging_data[NUM_SENSORS];
-static uint16_t tof_addresses[NUM_SENSORS] = {0x40, 0x44, 0x48, 0x50};
+static VL53L5CX_Configuration tof_config;
+static uint16_t tof_addresses[NUM_SENSORS] = {0x50, 0x66, 0x76, 0x86};
 
 // Bool that tracks when the obstacle embedder needs to be updated.
 static bool isStale = false;
@@ -52,7 +51,7 @@ static bool isStale = false;
 	static dtrTopology topology = NETWORK_TOPOLOGY;
 	static uint8_t self_id;
 	static uint8_t comm_tick = 0;
-	static uint8_t comm_freq = 1000;
+	static uint8_t comm_freq = 250;
 	// Tracks the distances between self and the N nearest drones (N=NUM_NEIGHBORS)
 	static float rel_distance[NUM_NEIGHBORS] = {10000.0f};
 
@@ -73,7 +72,7 @@ static float setpoint_array[6];
 #ifdef DEBUG_LOCALIZATION
 	static int count = 0;
 #endif
-static float thrust_coefficient = 1.0;
+static float thrust_coefficient = 1.05;
 
 
 /**
@@ -140,7 +139,7 @@ void normalizeThrust(control_t_n *control_nn, uint16_t *PWM_0, uint16_t *PWM_1, 
 void appMain() {	
 	//Initialize sensor platform
 	#ifdef TOF_ENABLE
-	tof_init(&sensor_status, tof_array, tof_addresses);
+		tof_init(&tof_config, tof_addresses);
 
 	vTaskDelay(M2T(100));
 	#endif
@@ -155,7 +154,7 @@ void appMain() {
 			vTaskDelay(M2T(67)); // 15Hz is roughly 67 ms intervals
 		#endif
 		#ifdef TOF_ENABLE
-			isStale = tof_task(tof_array, ranging_data, &sensor_status, (uint16_t* )tof_input, (uint8_t* ) tof_status);
+			isStale = tof_task(&tof_config, tof_addresses, &sensor_status, tof_input, tof_status);
 		#endif
 	}
 }
@@ -180,7 +179,7 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	comm_tick++;
 	if (comm_tick == comm_freq) {
 		comm_status = broadcastState(self_id, state);
-		updateNeighborData(self_id, rel_distance, state, neighbor_array);
+		updateNeighborData(topology, self_id, rel_distance, state, neighbor_array);
 		comm_tick = 0;
 	}
 
@@ -207,11 +206,11 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	state_array[2] = state->position.z - setpoint->position.z;
 
 	#ifdef DEBUG_LOCALIZATION
-		if (count == 500) {
-			DEBUG_PRINT("Estimation: (%f,%f,%f,%f)\n", state->position.x,state->position.y,state->position.z, thrust_coefficient);
+		if (count == 100) {
+			// DEBUG_PRINT("Estimation: (%f,%f,%f,%f)\n", state->position.x,state->position.y,state->position.z, thrust_coefficient);
 			// DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
 			// DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
-			DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[0], obstacle_inputs[1], obstacle_inputs[2], obstacle_inputs[3]);
+			DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[8], obstacle_inputs[9], obstacle_inputs[10], obstacle_inputs[11]);
 			// DEBUG_PRINT("Thrusts: (%i,%i,%i,%i)\n", control->normalizedForces[0], control->normalizedForces[1], control->normalizedForces[2], control->normalizedForces[3]);
 			count = 0;
 		}
@@ -286,10 +285,10 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		control->normalizedForces[2] = 0;
 		control->normalizedForces[3] = 0;
 	} else {
-		control->normalizedForces[0] = thrust_coefficient * iThrust_0;
-		control->normalizedForces[1] = thrust_coefficient * iThrust_1;
-		control->normalizedForces[2] = thrust_coefficient * iThrust_2;
-		control->normalizedForces[3] = thrust_coefficient * iThrust_3;
+		control->normalizedForces[0] = (uint16_t) thrust_coefficient * iThrust_0;
+		control->normalizedForces[1] = (uint16_t) thrust_coefficient * iThrust_1;
+		control->normalizedForces[2] = (uint16_t) thrust_coefficient * iThrust_2;
+		control->normalizedForces[3] = (uint16_t) thrust_coefficient * iThrust_3;
 	}
 }
 

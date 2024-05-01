@@ -74,46 +74,46 @@ bool broadcastState(uint8_t self_id, const state_t *state) {
     return msg_status;
 }
 
-void updateNeighborData(uint8_t my_id, float *rel_distance, const state_t *state, float *neighbor_array) {
-    DEBUG_PRINT("Receiving Message...");
+void updateNeighborData(dtrTopology topology, uint8_t my_id, float *rel_distance, const state_t *state, float *neighbor_array) {
     dtrPacket received_packet;
 
-    dtrGetPacket(&received_packet, M2T(10));
-    uint8_t other_id = received_packet.sourceId;
+    dtrGetPacket(&received_packet, M2T(5));
 
-    #ifdef ENABLE_NEIGHBOR_REL_VEL
-        float other_pos[6];
-    #else
-        float other_pos[3];
-    #endif
-    memcpy(other_pos, received_packet.data, data_size);
-    float my_pos[3] = {state->position.x, state->position.y, state->position.z};
-    float dist = get_dist(other_pos, my_pos);
-    // float pos1 = (float) received_packet.data[0];
-    // float pos2 = (float) received_packet.data[1];
-    // float pos3 = (float) received_packet.data[2];
-    #ifdef DEBUG_COMMUNICATION
-        DEBUG_PRINT("Received ID=%d: (%f, %f, %f)\n", other_id, other_pos[0], other_pos[1], other_pos[2]);
-    #endif
-    // Update distances array
-    rel_distance[other_id] = dist;
+    if (valid_packet(&received_packet, topology)) {
+        uint8_t other_id = received_packet.sourceId;
 
-    //Check to see if the robots are closer to yourself.
-    for (int i=0; i < NEIGHBOR_ATTENTION; i++) {
-        float current_neighbor_pos[3] = {neighbor_array[0], neighbor_array[1], neighbor_array[2]};
-        if (dist < get_dist(my_pos, current_neighbor_pos)) {
-            #ifdef ENABLE_NEIGHBOR_REL_VEL
-                for (int j=0;j<6;j++) {
-                    neighbor_array[j+(i*6)] = other_pos[j];
-                }
-            #else
-                for (int j=0;j<3;j++) {
-                    neighbor_array[j+(i*3)] = other_pos[j];
-                }
-            #endif
+        #ifdef ENABLE_NEIGHBOR_REL_VEL
+            float other_pos[6];
+        #else
+            float other_pos[3];
+        #endif
+        memcpy(other_pos, received_packet.data, data_size);
 
-            //Don't bother checking the other ones
-            return;
+        float my_pos[3] = {state->position.x, state->position.y, state->position.z};
+        float dist = get_dist(other_pos, my_pos);
+        #ifdef DEBUG_COMMUNICATION
+            DEBUG_PRINT("Received ID=%d: (%f, %f, %f)\n", other_id, other_pos[0], other_pos[1], other_pos[2]);
+        #endif
+        // Update distances array
+        rel_distance[other_id] = dist;
+
+        //Check to see if the robots are closer to yourself.
+        for (int i=0; i < NEIGHBOR_ATTENTION; i++) {
+            float current_neighbor_pos[3] = {neighbor_array[0], neighbor_array[1], neighbor_array[2]};
+            if (dist < get_dist(my_pos, current_neighbor_pos)) {
+                #ifdef ENABLE_NEIGHBOR_REL_VEL
+                    for (int j=0;j<6;j++) {
+                        neighbor_array[j+(i*6)] = other_pos[j];
+                    }
+                #else
+                    for (int j=0;j<3;j++) {
+                        neighbor_array[j+(i*3)] = other_pos[j];
+                    }
+                #endif
+
+                //Don't bother checking the other ones
+                return;
+            }
         }
     }
 }   
@@ -125,4 +125,12 @@ float get_dist(float *p1, float *p2) {
     float dz = p1[2] - p2[2];
 
     return dx*dx + dy*dy + dz*dz;
+}
+
+bool valid_packet(dtrPacket* packet, dtrTopology topology) {
+    for (int i=0; i < topology.size; i++) {
+        if ((packet->sourceId == topology.devices_ids[i]) & (packet->sourceId != dtrGetSelfId())) return true;
+    }
+
+    return false;
 }

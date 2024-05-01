@@ -68,6 +68,8 @@ bool broadcastState(uint8_t source_id, const state_t *state);
  * 
  * @param neighbor_array 
  */
-void updateNeighborData(uint8_t my_id, float *rel_distance, const state_t *state, float *neighbor_array);
+void updateNeighborData(dtrTopology topology, uint8_t my_id, float *rel_distance, const state_t *state, float *neighbor_array);
 
 float get_dist(float *p1, float *p2);
+
+bool valid_packet(dtrPacket* packet, dtrTopology topology);
