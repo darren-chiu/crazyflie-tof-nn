@@ -68,28 +68,14 @@ deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/sr
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/mpu_wrappers.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/task.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/list.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/radiolink.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/syslink.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/configblock.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/token_ring.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/timers.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/task.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/log.h \
-    $(wildcard include/config/debug/log/enable.h) \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/DTR_types.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/DTR_handlers.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/stdlib.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/machine/stdlib.h \
-  /usr/local/Cellar/gcc-arm-none-eabi/20200630/arm-none-eabi/include/alloca.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/token_ring.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/DTR_p2p_interface.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/p2pDTR/queueing.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/vendor/FreeRTOS/include/queue.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/queuemonitor.h \
-  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/static_mem.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/stabilizer_types.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/imu_types.h \
   /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/utils/interface/lighthouse/lighthouse_types.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/modules/interface/log.h \
+    $(wildcard include/config/debug/log/enable.h) \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/radiolink.h \
+  /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-firmware/src/hal/interface/syslink.h \
 
 /Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/p2p_state.o: $(deps_/Users/darrenchiu/Documents/Projects/crazyflie/crazyflie-tof-nn/firmware/src/p2p_state.o)
 

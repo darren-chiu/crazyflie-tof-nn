@@ -22,12 +22,10 @@
 // The number of ToF sensors to be used
 #define NUM_SENSORS 4
 // Number of TOTAL drones (this includes yourself)
-#define NUM_NEIGHBORS 2
-// Number of drones to consider. This determines the N nearest drones (where N is NEIGHBOR_ATTENTION)
-#define NEIGHBOR_ATTENTION 2
+#define NUM_DRONES 3
 //Size of the neighbor encoder for the network
 #define NEIGHBORS 2
-#define NBR_OBS_DIM 6
+#define NBR_OBS_DIM 3
 
 // Obstacle Avoidance Parameters
 #define OBST_MAX 2.0f
@@ -69,5 +67,11 @@ void networkEvaluate(control_t_n *control_n, const float *state_array);
  * 
  */
 void obstacleEmbedder(float obstacle_inputs[OBST_DIM]);
+
+/**
+ * @brief Encodes the neighbor array.
+ * 
+ */
+void neighborEmbedder(float neighbor_inputs[NEIGHBORS*NBR_OBS_DIM]);
 
 #endif

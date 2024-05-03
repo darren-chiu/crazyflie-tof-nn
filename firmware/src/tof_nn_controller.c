@@ -21,6 +21,7 @@
 #include "param.h"
 
 #include "task.h"
+#include "timers.h"
 #include "math3d.h"
 
 
@@ -44,25 +45,12 @@ static VL53L5CX_Configuration tof_config;
 static uint16_t tof_addresses[NUM_SENSORS] = {0x50, 0x66, 0x76, 0x86};
 
 // Bool that tracks when the obstacle embedder needs to be updated.
-static bool isStale = false;
+static bool isToFStale = false;
 
-// Neighbor Observations
-#ifdef MULTI_DRONE_ENABLE
-	static dtrTopology topology = NETWORK_TOPOLOGY;
-	static uint8_t self_id;
-	static uint8_t comm_tick = 0;
-	static uint8_t comm_freq = 250;
-	// Tracks the distances between self and the N nearest drones (N=NUM_NEIGHBORS)
-	static float rel_distance[NUM_NEIGHBORS] = {10000.0f};
+//This would be the input to the network
+static float neighbor_inputs[NEIGHBORS*NBR_OBS_DIM];
 
-	// This would be the input into the attention network
-	#ifdef ENABLE_NEIGHBOR_REL_VEL
-		static float neighbor_array[6*NEIGHBOR_ATTENTION] = {10000.0f};
-	#else
-		static float neighbor_array[3*NEIGHBOR_ATTENTION] = {10000.0f};
-	#endif
-
-#endif
+static xTimerHandle P2PPosTimer;
 
 // Dynamics Parameters
 static float state_array[STATE_DIM];
@@ -136,16 +124,42 @@ void normalizeThrust(control_t_n *control_nn, uint16_t *PWM_0, uint16_t *PWM_1, 
     *PWM_3 = UINT16_MAX * clip(scale(control_nn->thrust_3), 0.0, 1.0);
 }
 
+static void sendData(xTimerHandle timer) {
+	//Only Start sending messages when we are above the safe height. 
+	message_state_t tx_message;
+
+	
+	tx_message.x_pos = getX();
+	tx_message.y_pos = getY();
+	tx_message.z_pos = getZ();
+
+	#ifdef ENABLE_NEIGHBOR_REL_VEL
+		tx_message.x_vel = getVx();
+		tx_message.y_vel = getVy();
+		tx_message.z_vel = getVz();
+	#endif
+
+	broadcastState(tx_message);
+
+	// DEBUG_PRINT("SEND");
+}
+
 void appMain() {	
+
 	//Initialize sensor platform
 	#ifdef TOF_ENABLE
-		tof_init(&tof_config, tof_addresses);
-
-	vTaskDelay(M2T(100));
+		// tof_init(&tof_config, tof_addresses);
+		// vTaskDelay(M2T(10));
 	#endif
 
 	// Network Initialization
-	self_id = network_init(topology, rel_distance);
+	network_init();
+
+	//Start RTOS task for broadcasting
+	P2PPosTimer = xTimerCreate("P2PPosTimer", M2T(BROADCAST_PERIOD_MS), pdTRUE, NULL, sendData);
+    xTimerStart(P2PPosTimer, 20);
+
+
 
 	while(1) {
 		#ifdef ENABLE_4X4_CONTROLLER
@@ -154,7 +168,7 @@ void appMain() {
 			vTaskDelay(M2T(67)); // 15Hz is roughly 67 ms intervals
 		#endif
 		#ifdef TOF_ENABLE
-			isStale = tof_task(&tof_config, tof_addresses, &sensor_status, tof_input, tof_status);
+			// isToFStale = tof_task(&tof_config, tof_addresses, &sensor_status, tof_input, tof_status);
 		#endif
 	}
 }
@@ -176,12 +190,6 @@ bool controllerOutOfTreeTest() {
 void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const sensorData_t *sensors, const state_t *state, const uint32_t tick) {
 	control->controlMode = controlModeForce;
 	bool comm_status;
-	comm_tick++;
-	if (comm_tick == comm_freq) {
-		comm_status = broadcastState(self_id, state);
-		updateNeighborData(topology, self_id, rel_distance, state, neighbor_array);
-		comm_tick = 0;
-	}
 
 	struct mat33 rot;
 
@@ -206,11 +214,11 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	state_array[2] = state->position.z - setpoint->position.z;
 
 	#ifdef DEBUG_LOCALIZATION
-		if (count == 100) {
-			// DEBUG_PRINT("Estimation: (%f,%f,%f,%f)\n", state->position.x,state->position.y,state->position.z, thrust_coefficient);
+		if (count == 750) {
+			DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
 			// DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
 			// DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
-			DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[8], obstacle_inputs[9], obstacle_inputs[10], obstacle_inputs[11]);
+			// DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[8], obstacle_inputs[9], obstacle_inputs[10], obstacle_inputs[11]);
 			// DEBUG_PRINT("Thrusts: (%i,%i,%i,%i)\n", control->normalizedForces[0], control->normalizedForces[1], control->normalizedForces[2], control->normalizedForces[3]);
 			count = 0;
 		}
@@ -265,15 +273,18 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[17] = omega_yaw;
 	}
 
-	if (!isStale) {
+	if (!isToFStale) {
 		#ifdef TOF_ENABLE
-			isStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
-			obstacleEmbedder(obstacle_inputs);
+			// isToFStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
+			// obstacleEmbedder(obstacle_inputs);
 		#endif
 	}
 
-	networkEvaluate(&control_nn, state_array);
+	updateNeighborInputs(state, neighbor_inputs);
+	neighborEmbedder(neighbor_inputs);  
 
+
+	networkEvaluate(&control_nn, state_array);
 
 	// convert thrusts to normalized Thrust
 	uint16_t iThrust_0, iThrust_1, iThrust_2, iThrust_3; 

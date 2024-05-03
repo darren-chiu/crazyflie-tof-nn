@@ -164,7 +164,7 @@ bool tof_task(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses, uint8
         
     }
     // DEBUG_PRINT("ToF: (%u,%u,%u,%u)\n", tof_input[32], tof_input[33], tof_input[34], tof_input[35]);
-    // Sets the "isStale" variable to false in order to indicate a fresh measurement is here. Yummy.
+    // Sets the "isToFStale" variable to false in order to indicate a fresh measurement is here. Yummy.
     return false;
 }
 
