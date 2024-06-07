@@ -2,13 +2,12 @@
  * @file tof_nn_controller.c
  * @author Darren Chiu (chiudarr@usc.edu)
  * @brief 
- * @version 0.1
+ * @version 2.0
  * @date 2024-04-25
  * 
  * @copyright Copyright (c) 2024
  * 
- * 
- * TODO: 1. Check overload in RTOS queue. 
+ *
  */
 #include <stdint.h>
 #include <stdbool.h>
@@ -50,17 +49,19 @@ static bool isToFStale = false;
 //This would be the input to the network
 static float neighbor_inputs[NEIGHBORS*NBR_OBS_DIM];
 
+// Timer that tracks peer to peer exchange. 
 static xTimerHandle P2PPosTimer;
+// Timer that tracks the observation request process. 
+static xTimerHandle ObservationTimer;
 
 // Dynamics Parameters
 static float state_array[STATE_DIM];
 static float setpoint_array[6];
 
-// Debugging Parameters
-#ifdef DEBUG_LOCALIZATION
-	static int count = 0;
-#endif
+
+static int count = 0;
 static float thrust_coefficient = 1.0;
+static uint16_t thrust_offset = 500;
 
 
 /**
@@ -108,6 +109,15 @@ float clip(float v, float min, float max) {
 }
 
 /**
+ * @brief Used by RTOS to match sensor timing
+ * 
+ * @param timer 
+ */
+static void pullObs(xTimerHandle timer) {
+	isToFStale = tof_task(&tof_config, tof_addresses, &sensor_status, tof_input, tof_status);
+}
+
+/**
  * @brief Normalize thrusts from 0 to 1 on an unsigned 16 bit integer resolution. 
  */
 void normalizeThrust(control_t_n *control_nn, uint16_t *PWM_0, uint16_t *PWM_1, uint16_t *PWM_2, uint16_t *PWM_3) {
@@ -140,35 +150,40 @@ static void sendData(xTimerHandle timer) {
 	#endif
 
 	broadcastState(tx_message);
-
-	// DEBUG_PRINT("SEND");
 }
 
 void appMain() {	
 
 	//Initialize sensor platform
 	#ifdef TOF_ENABLE
-		// tof_init(&tof_config, tof_addresses);
-		// vTaskDelay(M2T(10));
+		//Initialize sensor platform
+		tof_init(&tof_config, tof_addresses);
+		
+		vTaskDelay(M2T(10));
+		//Start RTOS task for observations. The task will thus run at M2T(67) ~ 15Hz.
+		ObservationTimer = xTimerCreate("ObservationTimer", M2T(67), pdTRUE, NULL, pullObs);
+		xTimerStart(ObservationTimer, 20);
 	#endif
 
-	// Network Initialization
-	network_init();
-
 	//Start RTOS task for broadcasting
-	P2PPosTimer = xTimerCreate("P2PPosTimer", M2T(BROADCAST_PERIOD_MS), pdTRUE, NULL, sendData);
-    xTimerStart(P2PPosTimer, 20);
+	#ifdef MULTI_DRONE_ENABLE
+		// Network Initialization
+		network_init();
+		P2PPosTimer = xTimerCreate("P2PPosTimer", M2T(BROADCAST_PERIOD_MS), pdTRUE, NULL, sendData);
+		xTimerStart(P2PPosTimer, 20);
+	#endif
 
 
 
 	while(1) {
-		#ifdef ENABLE_4X4_CONTROLLER
-			vTaskDelay(M2T(34)); // 30Hz is roughly 30 ms intervals
-		#else
-			vTaskDelay(M2T(67)); // 15Hz is roughly 67 ms intervals
-		#endif
-		#ifdef TOF_ENABLE
-			// isToFStale = tof_task(&tof_config, tof_addresses, &sensor_status, tof_input, tof_status);
+		vTaskDelay(M2T(500));
+		#ifdef DEBUG_LOCALIZATION
+			// DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
+			// DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
+			// DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
+			DEBUG_PRINT("ToF: (%f,%f,%f,%f,%f,%f,%f,%f)\n", obstacle_inputs[0], obstacle_inputs[1], obstacle_inputs[2], obstacle_inputs[3], obstacle_inputs[4], obstacle_inputs[5], obstacle_inputs[6], obstacle_inputs[7]);
+			// DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[0], obstacle_inputs[3], obstacle_inputs[5], obstacle_inputs[7]);
+			// DEBUG_PRINT("Thrusts: (%i,%i,%i,%i)\n", control->normalizedForces[0], control->normalizedForces[1], control->normalizedForces[2], control->normalizedForces[3]);
 		#endif
 	}
 }
@@ -192,13 +207,21 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	bool comm_status;
 
 	struct mat33 rot;
+	struct mat33 rot_desired;
 
 	// Orientation
-	struct quat q = mkquat(state->attitudeQuaternion.x, 
+	struct quat q = mkquat(state->attitudeQuaternion.x, 	
 						   state->attitudeQuaternion.y, 
 						   state->attitudeQuaternion.z, 
 						   state->attitudeQuaternion.w);
 	rot = quat2rotmat(q);
+
+	struct quat q_desired = mkquat(setpoint->attitudeQuaternion.x, 
+						   setpoint->attitudeQuaternion.y, 
+						   setpoint->attitudeQuaternion.z, 
+						   setpoint->attitudeQuaternion.w);
+	rot_desired = quat2rotmat(q_desired);
+
 
 	// angular velocity
 	float omega_roll = radians(sensors->gyro.x);
@@ -213,18 +236,6 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	state_array[1] = state->position.y - setpoint->position.y;
 	state_array[2] = state->position.z - setpoint->position.z;
 
-	#ifdef DEBUG_LOCALIZATION
-		if (count == 750) {
-			DEBUG_PRINT("Estimation: (%f,%f,%f)\n", state->position.x,state->position.y,state->position.z);
-			// DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
-			// DEBUG_PRINT("ERROR: (%f,%f,%f)\n", state_array[0], state_array[1], state_array[2]);
-			// DEBUG_PRINT("ToF: (%f,%f,%f,%f)\n", obstacle_inputs[8], obstacle_inputs[9], obstacle_inputs[10], obstacle_inputs[11]);
-			// DEBUG_PRINT("Thrusts: (%i,%i,%i,%i)\n", control->normalizedForces[0], control->normalizedForces[1], control->normalizedForces[2], control->normalizedForces[3]);
-			count = 0;
-		}
-		count++;
-	#endif
-
 	if (REL_VEL) {
 		state_array[3] = state->velocity.x - setpoint->velocity.x;
 		state_array[4] = state->velocity.y - setpoint->velocity.y;
@@ -234,16 +245,28 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[4] = state->velocity.y;
 		state_array[5] = state->velocity.z;
 	}
-	// TODO: ADD RELATIVE ROTATION MATRIX
-	state_array[6] = rot.m[0][0];
-	state_array[7] = rot.m[0][1];
-	state_array[8] = rot.m[0][2];
-	state_array[9] = rot.m[1][0];
-	state_array[10] = rot.m[1][1];
-	state_array[11] = rot.m[1][2];
-	state_array[12] = rot.m[2][0];
-	state_array[13] = rot.m[2][1];
-	state_array[14] = rot.m[2][2];
+	
+	if (REL_ROT) {
+		state_array[6] = rot.m[0][0] - rot_desired.m[0][0];
+		state_array[7] = rot.m[0][1] - rot_desired.m[0][1];
+		state_array[8] = rot.m[0][2] - rot_desired.m[0][2];
+		state_array[9] = rot.m[1][0] - rot_desired.m[1][0];
+		state_array[10] = rot.m[1][1] - rot_desired.m[1][1];
+		state_array[11] = rot.m[1][2] - rot_desired.m[1][2];
+		state_array[12] = rot.m[2][0] - rot_desired.m[2][0];
+		state_array[13] = rot.m[2][1] - rot_desired.m[2][1];
+		state_array[14] = rot.m[2][2] - rot_desired.m[2][2];
+	} else {
+		state_array[6] = rot.m[0][0];
+		state_array[7] = rot.m[0][1];
+		state_array[8] = rot.m[0][2];
+		state_array[9] = rot.m[1][0];
+		state_array[10] = rot.m[1][1];
+		state_array[11] = rot.m[1][2];
+		state_array[12] = rot.m[2][0];
+		state_array[13] = rot.m[2][1];
+		state_array[14] = rot.m[2][2];
+	}
 
 	if (REL_XYZ) {
 		// rotate pos and vel
@@ -275,13 +298,15 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 
 	if (!isToFStale) {
 		#ifdef TOF_ENABLE
-			// isToFStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
-			// obstacleEmbedder(obstacle_inputs);
+			isToFStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
+			obstacleEmbedder(obstacle_inputs);
 		#endif
 	}
 
-	updateNeighborInputs(state, neighbor_inputs);
-	neighborEmbedder(neighbor_inputs);  
+	#ifdef MULTI_DRONE_ENABLE
+		updateNeighborInputs(state, neighbor_inputs);
+		neighborEmbedder(neighbor_inputs);  
+	#endif
 
 
 	networkEvaluate(&control_nn, state_array);
@@ -296,14 +321,24 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		control->normalizedForces[2] = 0;
 		control->normalizedForces[3] = 0;
 	} else {
-		control->normalizedForces[0] = (uint16_t) thrust_coefficient * iThrust_0;
-		control->normalizedForces[1] = (uint16_t) thrust_coefficient * iThrust_1;
-		control->normalizedForces[2] = (uint16_t) thrust_coefficient * iThrust_2;
-		control->normalizedForces[3] = (uint16_t) thrust_coefficient * iThrust_3;
+		control->normalizedForces[0] = (uint16_t) (thrust_coefficient * iThrust_0 + thrust_offset);
+		control->normalizedForces[1] = (uint16_t) (thrust_coefficient * iThrust_1 + thrust_offset);
+		control->normalizedForces[2] = (uint16_t) (thrust_coefficient * iThrust_2 + thrust_offset);
+		control->normalizedForces[3] = (uint16_t) (thrust_coefficient * iThrust_3 + thrust_offset);
 	}
 }
 
-LOG_GROUP_START(ctrlNN)
+/**
+ * [Documentation for the ring group ...]
+ */
+PARAM_GROUP_START(paramNN)
+/**
+ * @brief to start the flight
+ */
+PARAM_ADD_CORE(PARAM_UINT16, thrust_offset, &thrust_offset)
+PARAM_GROUP_STOP(paramNN)
+
+LOG_GROUP_START(logNN)
 
 LOG_ADD(LOG_FLOAT, set_x, &setpoint_array[0])
 LOG_ADD(LOG_FLOAT, set_y, &setpoint_array[1])
@@ -316,4 +351,4 @@ LOG_ADD(LOG_FLOAT, obs3, &obstacle_inputs[2])
 LOG_ADD(LOG_FLOAT, obs4, &obstacle_inputs[3])
 
 
-LOG_GROUP_STOP(ctrlNN)
+LOG_GROUP_STOP(logNN)

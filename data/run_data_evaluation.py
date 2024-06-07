@@ -102,13 +102,13 @@ def plot_traj(data, directory):
     # # Extracting columns for orientation (quaternions)
     # quat_columns = ['locSrv.qx', 'locSrv.qy', 'locSrv.qz', 'locSrv.qw']
 
-    estimatex = data['kalman.stateX']
-    estimatey = data['kalman.stateY']
-    estimatez = data['kalman.stateZ']
+    estimatex = data['stateEstimate.x']
+    estimatey = data['stateEstimate.y']
+    estimatez = data['stateEstimate.z']
 
     desiredx = data['ctrlNN.set_x']
     desiredy = data['ctrlNN.set_y']
-    desiredz = data['ctrlNN.set_z']
+    # desiredz = data['ctrlNN.set_z']
 
     timestep = data['timestamp']
 
@@ -147,13 +147,13 @@ def plot_traj(data, directory):
         # Set labels
         ax.set_xlabel('X-axis')
         ax.set_ylabel('Y-axis')
-        ax.set_xlim(-1, 1)
-        ax.set_ylim(-8, 1)
+        # ax.set_xlim(-1, 1)
+        # ax.set_ylim(-8, 1)
 
-        if draw_obst:
-            rect = patches.Rectangle((-0.2, -3), 0.3, 0.3, linewidth=1, edgecolor='r', facecolor='none')
+        # if draw_obst:
+        #     rect = patches.Rectangle((-0.2, -3), 0.3, 0.3, linewidth=1, edgecolor='r', facecolor='none')
         # ax.set_zlabel('Z-axis')
-        ax.add_patch(rect)
+        # ax.add_patch(rect)
         ax.legend()
     # ax.plot(viconx, vicony, viconz, marker='o', label='Vicon', color='green', markersize=0.05)
 
@@ -305,21 +305,21 @@ def calc_error(data):
 def main():
     data_len = 0
     # for folder in tqdm(['domain_randomization_on/0000', 'simstep4_4enc_empty/0000', 'simstep4_4enc_empty/obstacle', 'simstep4_thrust_empty/0000', 'simstep4_4enc_05/0000']):
-    for folder in ['obs_avoid']:
+    for folder in ['random']:
         for filename in os.listdir(folder):
             if ('.' not in filename):
                 filename = os.path.join(folder,filename)
                 print(f'Evaluating on data {filename}...')
                 # print(filename)
                 data = decode(filename)["fixedFrequency"]
-                if (len(data['kalman.stateX']) > data_len):
-                    data_len = len(data['kalman.stateX'])
+                if (len(data['stateEstimate.x']) > data_len):
+                    data_len = len(data['stateEstimate.x'])
                 data_total.append(data)
                 # print(data)
 
-                plot_error(data, filename)
+                # plot_error(data, filename)
                 plot_traj(data, filename)
-        plot_avg_std_error(data_total, data_len, folder)
+        # plot_avg_std_error(data_total, data_len, folder)
 
 if __name__ == "__main__":
     main()

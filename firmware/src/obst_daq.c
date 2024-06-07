@@ -29,14 +29,14 @@ uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses) {
         if (status == true) {
             DEBUG_PRINT("Enable VL53L5CX [%i]\n", i); 
         }
-        vTaskDelay(M2T(100));
+        vTaskDelay(M2T(10));
 
         tof_config->platform = VL53L5CX_DEFAULT_I2C_ADDRESS;
         sensor_status = vl53l5cx_init(tof_config);
         if (sensor_status != 0) {
             DEBUG_PRINT("Failed to Initializae VL53L5CX [%i]\n", i);
         }
-        vTaskDelay(M2T(100));
+        vTaskDelay(M2T(10));
         sensor_status = vl53l5cx_set_i2c_address(tof_config, tof_addresses[i]);
         // DEBUG_PRINT("Set VL53L5CX [%i] Address\n", i);
         // The following depends on which configuration is used.
@@ -53,14 +53,14 @@ uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses) {
             } 
         #else
             // Sets the sensor to be 8x8.
-            sensor_status = vl53l5cx_set_resolution(&f_dev, VL53L5CX_RESOLUTION_8X8);
-            if (sensor_status == 0) {
-                DEBUG_PRINT("VL53L5CX Initialize: Pass\n"); 
+            sensor_status = vl53l5cx_set_resolution(tof_config, VL53L5CX_RESOLUTION_8X8);
+            if (sensor_status != 0) {
+                DEBUG_PRINT("VL53L5CX [%i] Set Resolution: Fail\n", i); 
             }
-            sensor_status = vl53l5cx_set_ranging_frequency_hz(&f_dev, 15);
+            sensor_status = vl53l5cx_set_ranging_frequency_hz(tof_config, 30);
 
-            if (sensor_status == 0) {
-                DEBUG_PRINT("VL53L5CX Frequency Config: Pass\n"); 
+            if (sensor_status != 0) {
+                DEBUG_PRINT("VL53L5CX [%i] Frequency Config: Fail\n", i); 
             } 
         #endif
         //Below function should be the last called in the init. 
@@ -112,37 +112,37 @@ bool process_obst(const state_t *state, float *obstacle_inputs, uint16_t *tof_in
 			}
 		}
 	#else
-	
-	if (state->position.z > SAFE_HEIGHT) {
-		int row_index = 32;
-		for (int i=0;i<8;i++) {
-			int spad_index = row_index + i;
-			if ((tof_status[spad_index] == 9) || (tof_status[spad_index] == 5)) {
-				float obst_cap;
-				obst_cap = tof_input[spad_index];
-				obst_cap = obst_cap / 1000.0f;
+        // ToF Measurements are noisy on takeoff.
+        if (state->position.z > SAFE_HEIGHT) {
+            int row_index = 24; //This denotes which row to start from. See note above.
+            for (int j=0;j<NUM_SENSORS;j++) {
+                for (int i=0;i<8;i++) {				
+                    int spad_index = row_index + i;
+                    int sensor_index = (j*OBST_DIM);
+                    // Check if the pixels are valid 
+                    if ((tof_status[sensor_index + spad_index] == 9) || (tof_status[sensor_index + spad_index] == 5)) {
+                        float obst_cap;
 
-				if ((obst_cap > OBST_MAX)) {
-					obst_cap = OBST_MAX;
-				}
-				obstacle_inputs[i] = obst_cap;
-				// obstacle_inputs[i] = OBST_MAX;
-			} else {
-				// DEBUG_PRINT("Invalid Reading!");
-				obstacle_inputs[i] = OBST_MAX;
-			}
-			// obstacle_inputs[i] = 2.0f;
-			// tof_input[i] = 2.0f;
-		}	
+                        obst_cap = tof_input[sensor_index + spad_index] * 1.0f;
+                        obst_cap = obst_cap / 1000.0f;
 
-		// for (int i=0;i<OBST_DIM;i++) {
-		// 	obstacle_inputs[i] = OBST_MAX;
-		// } 
-	} else {
-		for (int i=0;i<OBST_DIM;i++) {
-			obstacle_inputs[i] = OBST_MAX;
-		}
-	}
+                        if ((obst_cap > OBST_MAX)) {
+                            obst_cap = OBST_MAX;
+                        }
+                        obstacle_inputs[network_index] = obst_cap;
+                        // obstacle_inputs[i] = OBST_MAX; //Ablate inputs to NN
+                    } else {
+                        // DEBUG_PRINT("Invalid Reading!");
+                        obstacle_inputs[network_index] = OBST_MAX;
+                    }
+                    network_index++;
+                }
+            }
+        } else {
+            for (int i=0;i<OBST_DIM;i++) {
+                obstacle_inputs[i] = OBST_MAX;
+            }
+        }
 	#endif
 
     return true;

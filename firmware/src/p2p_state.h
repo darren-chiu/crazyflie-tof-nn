@@ -21,8 +21,6 @@
 
 #include "debug.h"
 
-// #include "token_ring.h"
-// #include "DTR_p2p_interface.h"
 #include "stabilizer_types.h"
 
 #include "network_evaluate_tof.h"
