@@ -7,8 +7,6 @@
 #include "stabilizer_types.h"
 
 #define EXPANDER_ADDR 0x20
-//The order which allows us to use the ToF in clockwise order
-static uint8_t pin_order[4] = {0, 3, 1, 2}; 
 /**
  * @brief Initializes all the tof sensors.
  * 
@@ -32,4 +30,5 @@ bool process_obst(const state_t *state, float *obstacle_inputs, uint16_t *tof_in
  */
 bool tof_task(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses, uint8_t* sensor_status, uint16_t *tof_input, uint8_t *tof_status);
 bool I2C_expander_set_pin(uint8_t pin_number, uint8_t pin_value);
+void tof_disable_all();
 #endif

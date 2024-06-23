@@ -8,15 +8,17 @@
 // When defined, enables the ToF module.
 #define TOF_ENABLE 
 // Enable print statements
-#define DEBUG_LOCALIZATION
+// #define DEBUG_LOCALIZATION
 
 // Enable print statements for communication
 // #define DEBUG_COMMUNICATION
 
 //Enable Multi Drone
 // #define MULTI_DRONE_ENABLE
+
 // When defined, uses 4x4 as ToF input with corresponding controller
 // #define ENABLE_4X4_CONTROLLER
+
 // Defines the dynamics dimmensions
 #define STATE_DIM 18
 // The number of ToF sensors to be used
@@ -37,9 +39,9 @@
 	#define OBST_DIM 32
 #endif
 
-#define REL_VEL false
-#define REL_OMEGA false
-#define REL_XYZ false
+#define REL_VEL true
+#define REL_OMEGA true
+#define REL_XYZ true
 #define REL_ROT true
 
 

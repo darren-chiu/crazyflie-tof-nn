@@ -1,6 +1,17 @@
 #include "obst_daq.h"
 #include "i2cdev.h"
 
+//The order which allows us to use the ToF in clockwise order
+static uint8_t pin_order[4] = {0, 2, 1, 3}; 
+
+void tof_disable_all() {
+    bool I2C_expander_status;
+    // Disable all the sensors by setting the output of all pins to be 0.
+    I2C_expander_status = i2cdevWriteByte(I2C1_DEV, EXPANDER_ADDR, 0x01, 0x00);
+    if (I2C_expander_status == true) {
+        DEBUG_PRINT("Disabled all ToF sensors.\n"); 
+    }
+}
 
 uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses) {
     bool I2C_expander_status;
@@ -10,12 +21,6 @@ uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses) {
     if (I2C_expander_status == false) {
         DEBUG_PRINT("I2C Output Configuration: Fail\n"); 
     }
-    // Disable all the sensors by setting the output of all pins to be 0.
-    I2C_expander_status = i2cdevWriteByte(I2C1_DEV, EXPANDER_ADDR, 0x01, 0x00);
-    if (I2C_expander_status == true) {
-        DEBUG_PRINT("Disabled all ToF sensors.\n"); 
-    }
-
     i2cdevWriteByte(I2C1_DEV, EXPANDER_ADDR, 0x02, 0x00);
     if (I2C_expander_status == true) {
         DEBUG_PRINT("Assigned Inversioln\n"); 
@@ -75,7 +80,7 @@ uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses) {
 
 bool process_obst(const state_t *state, float *obstacle_inputs, uint16_t *tof_input, uint8_t *tof_status) {
    	/**
-   	 * NOTE: Use only the values of a specific column
+   	 * NOTE: Use only the values of a specific row
      * The ToF lens flips the image plane vertically and horizontally
    	 */
     int network_index = 0;
@@ -130,7 +135,7 @@ bool process_obst(const state_t *state, float *obstacle_inputs, uint16_t *tof_in
                             obst_cap = OBST_MAX;
                         }
                         obstacle_inputs[network_index] = obst_cap;
-                        // obstacle_inputs[i] = OBST_MAX; //Ablate inputs to NN
+                        // obstacle_inputs[network_index] = OBST_MAX; //Ablate inputs to NN
                     } else {
                         // DEBUG_PRINT("Invalid Reading!");
                         obstacle_inputs[network_index] = OBST_MAX;

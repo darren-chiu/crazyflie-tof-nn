@@ -95,8 +95,6 @@ void updateNeighborInputs(const state_t *state, float *neighbor_inputs) {
 
 void network_init() {
     //================================== Basic P2P Implementaiton ============================================
-    initLogIds();
-
     p2pRegisterCB(p2pcallbackHandler);
     uint64_t address = configblockGetRadioAddress();
     self_id = (uint8_t)((address) & 0x00000000ff);
