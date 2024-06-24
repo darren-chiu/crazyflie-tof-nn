@@ -1,9 +1,6 @@
 #include "obst_daq.h"
 #include "i2cdev.h"
 
-//The order which allows us to use the ToF in clockwise order
-static uint8_t pin_order[4] = {0, 2, 1, 3}; 
-
 void tof_disable_all() {
     bool I2C_expander_status;
     // Disable all the sensors by setting the output of all pins to be 0.

@@ -31,6 +31,7 @@
 #include "obst_daq.h"
 #include "p2p_state.h"
 #include "network_evaluate_tof.h"
+#include "network_config.h"
 
 // Edit the debug name to get nice debug prints
 #define DEBUG_MODULE "TOF_NN_CONTROLLER"

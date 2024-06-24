@@ -23,12 +23,7 @@
 
 #include "stabilizer_types.h"
 
-#include "network_evaluate_tof.h"
-
-// #define ENABLE_NEIGHBOR_REL_VEL
-
-// How many ms between each broadcast 
-#define BROADCAST_PERIOD_MS 10
+#include "network_config.h"
 
 typedef struct {
     uint8_t id;

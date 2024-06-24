@@ -1,11 +1,7 @@
-#include "network_evaluate_tof.h"
 #include "p2p_state.h"
 #include "log.h"
 #include "task.h"
 #include "radiolink.h"
-
-
-#define P2P_PORT 5
 
 static uint8_t self_id;
 // Tracks the distances between self and N drones (N=NEIGHBORS)
