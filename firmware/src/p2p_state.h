@@ -60,17 +60,12 @@ void network_init();
  */
 void broadcastState(message_state_t tx_message);
 
-/**
- * @brief Updates neighboar array with the 2 closests drones.
- * 
- * @param neighbor_array 
- */
-// void updateNeighborData(dtrTopology topology, uint8_t my_id, float *rel_distance, const state_t *state, float *neighbor_array);
-
 float get_dist(float *p1, float *p2);
 
 void updateNeighborInputs(const state_t *state, float *neighbor_inputs);
-// bool valid_packet(dtrPacket* packet, dtrTopology topology);
+
+// 
+void initLogIds();
 
 // Loggging variables for both broadcast
 float getX();

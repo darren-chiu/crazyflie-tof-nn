@@ -1,6 +1,9 @@
 #include "obst_daq.h"
 #include "i2cdev.h"
 
+//The order which allows us to use the ToF in clockwise order
+static uint8_t pin_order[4] = {0, 2, 1, 3}; 
+
 void tof_disable_all() {
     bool I2C_expander_status;
     // Disable all the sensors by setting the output of all pins to be 0.
@@ -75,7 +78,7 @@ uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses) {
     return sensor_status;
 }
 
-bool process_obst(const state_t *state, float *obstacle_inputs, uint16_t *tof_input, uint8_t *tof_status) {
+bool process_obst(const state_t *state, volatile float *obstacle_inputs, uint16_t *tof_input, uint8_t *tof_status) {
    	/**
    	 * NOTE: Use only the values of a specific row
      * The ToF lens flips the image plane vertically and horizontally
@@ -172,7 +175,7 @@ bool tof_task(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses, uint8
 
 
 /**
- * Function written by Vlad Niculescu
+ * Function originally written by Vlad Niculescu
  * https://github.com/ETH-PBL/NanoSLAM/blob/main/stm32-app/src/tof-matrix/drivers/i2c_expander.c#L17
  */
 bool I2C_expander_set_pin(uint8_t pin_number, uint8_t pin_value) {

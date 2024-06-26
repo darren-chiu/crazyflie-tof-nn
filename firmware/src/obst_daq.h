@@ -19,7 +19,7 @@ uint8_t tof_init(VL53L5CX_Configuration *tof_config, uint16_t *tof_addresses);
  * @return bool: Indicates that the measurement is now stale. 
  */
 
-bool process_obst(const state_t *state, float *obstacle_inputs, uint16_t *tof_input, uint8_t *tof_status);
+bool process_obst(const state_t *state, volatile float *obstacle_inputs, uint16_t *tof_input, uint8_t *tof_status);
 /**
  * @brief Collects ToF matrix data.     
  * ORIGINAL: [Front, Back, Left, Right]
