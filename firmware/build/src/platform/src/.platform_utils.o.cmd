@@ -4,7 +4,7 @@ source_src/platform/src/platform_utils.o := /home/darren/Documents/crazyflie-fir
 
 deps_src/platform/src/platform_utils.o := \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform.h \
-    $(wildcard include/config/sensors/bmi088/bmp388.h) \
+    $(wildcard include/config/sensors/bmi088/bmp3xx.h) \
     $(wildcard include/config/sensors/bmi088/spi.h) \
     $(wildcard include/config/sensors/mpu9250/lps25h.h) \
     $(wildcard include/config/sensors/bosch.h) \

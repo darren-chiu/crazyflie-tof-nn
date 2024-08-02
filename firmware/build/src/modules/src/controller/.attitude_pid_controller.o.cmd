@@ -43,6 +43,7 @@ deps_src/modules/src/controller/attitude_pid_controller.o := \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/stabilizer_types.h \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults.h \
     $(wildcard include/config/platform/cf2.h) \
+    $(wildcard include/config/platform/cf21bl.h) \
     $(wildcard include/config/platform/bolt.h) \
     $(wildcard include/config/platform/tag.h) \
     $(wildcard include/config/platform/flapper.h) \

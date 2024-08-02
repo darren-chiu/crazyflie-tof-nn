@@ -3,6 +3,7 @@ cmd_src/hal/src/storage.o := arm-none-eabi-gcc -Wp,-MD,src/hal/src/.storage.o.d 
 source_src/hal/src/storage.o := /home/darren/Documents/crazyflie-firmware/src/hal/src/storage.c
 
 deps_src/hal/src/storage.o := \
+    $(wildcard include/config/defrag/storage/on/startup.h) \
   /home/darren/Documents/crazyflie-firmware/src/hal/interface/storage.h \
   /usr/lib/gcc/arm-none-eabi/10.3.1/include/stdbool.h \
   /usr/lib/gcc/arm-none-eabi/10.3.1/include/stddef.h \

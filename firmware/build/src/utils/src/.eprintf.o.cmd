@@ -19,6 +19,12 @@ deps_src/utils/src/eprintf.o := \
   /usr/include/newlib/machine/_default_types.h \
   /usr/lib/gcc/arm-none-eabi/10.3.1/include/stddef.h \
   /usr/include/newlib/sys/_locale.h \
+  /usr/include/newlib/math.h \
+  /usr/include/newlib/sys/reent.h \
+  /usr/include/newlib/_ansi.h \
+  /usr/include/newlib/sys/_types.h \
+  /usr/include/newlib/machine/_types.h \
+  /usr/include/newlib/sys/lock.h \
 
 src/utils/src/eprintf.o: $(deps_src/utils/src/eprintf.o)
 

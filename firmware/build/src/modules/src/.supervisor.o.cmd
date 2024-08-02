@@ -105,6 +105,7 @@ deps_src/modules/src/supervisor.o := \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/supervisor_state_machine.h \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults.h \
     $(wildcard include/config/platform/cf2.h) \
+    $(wildcard include/config/platform/cf21bl.h) \
     $(wildcard include/config/platform/bolt.h) \
     $(wildcard include/config/platform/tag.h) \
     $(wildcard include/config/platform/flapper.h) \

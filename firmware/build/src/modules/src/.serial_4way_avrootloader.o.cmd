@@ -44,7 +44,7 @@ deps_src/modules/src/serial_4way_avrootloader.o := \
   /home/darren/Documents/crazyflie-firmware/vendor/FreeRTOS/include/task.h \
   /home/darren/Documents/crazyflie-firmware/vendor/FreeRTOS/include/list.h \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform.h \
-    $(wildcard include/config/sensors/bmi088/bmp388.h) \
+    $(wildcard include/config/sensors/bmi088/bmp3xx.h) \
     $(wildcard include/config/sensors/bmi088/spi.h) \
     $(wildcard include/config/sensors/mpu9250/lps25h.h) \
     $(wildcard include/config/sensors/bosch.h) \

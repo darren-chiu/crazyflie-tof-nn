@@ -3,6 +3,7 @@ cmd_src/modules/src/power_distribution_quadrotor.o := arm-none-eabi-gcc -Wp,-MD,
 source_src/modules/src/power_distribution_quadrotor.o := /home/darren/Documents/crazyflie-firmware/src/modules/src/power_distribution_quadrotor.c
 
 deps_src/modules/src/power_distribution_quadrotor.o := \
+    $(wildcard include/config/motors/require/arming.h) \
     $(wildcard include/config/motors/default/idle/thrust.h) \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/power_distribution.h \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/stabilizer_types.h \
@@ -29,12 +30,8 @@ deps_src/modules/src/power_distribution_quadrotor.o := \
   /usr/include/newlib/sys/_locale.h \
   /usr/include/newlib/strings.h \
   /usr/include/newlib/sys/string.h \
-  /home/darren/Documents/crazyflie-firmware/src/modules/interface/log.h \
-    $(wildcard include/config/debug/log/enable.h) \
-  /home/darren/Documents/crazyflie-firmware/src/modules/interface/param.h \
-  /home/darren/Documents/crazyflie-firmware/src/modules/interface/param_logic.h \
-  /home/darren/Documents/crazyflie-firmware/src/modules/interface/crtp.h \
-  /home/darren/Documents/crazyflie-firmware/src/utils/interface/num.h \
+  /home/darren/Documents/crazyflie-firmware/src/utils/interface/debug.h \
+    $(wildcard include/config/debug/print/on/uart1.h) \
   /home/darren/Documents/crazyflie-firmware/src/config/config.h \
     $(wildcard include/config/h/.h) \
     $(wildcard include/config/block/address.h) \
@@ -42,7 +39,23 @@ deps_src/modules/src/power_distribution_quadrotor.o := \
   /home/darren/Documents/crazyflie-firmware/src/drivers/interface/nRF24L01reg.h \
   /home/darren/Documents/crazyflie-firmware/src/config/trace.h \
   /home/darren/Documents/crazyflie-firmware/src/hal/interface/usec_time.h \
+  /home/darren/Documents/crazyflie-firmware/src/modules/interface/console.h \
+  /home/darren/Documents/crazyflie-firmware/src/utils/interface/eprintf.h \
+  /usr/lib/gcc/arm-none-eabi/10.3.1/include/stdarg.h \
+  /home/darren/Documents/crazyflie-firmware/src/modules/interface/log.h \
+    $(wildcard include/config/debug/log/enable.h) \
+  /home/darren/Documents/crazyflie-firmware/src/modules/interface/param.h \
+  /home/darren/Documents/crazyflie-firmware/src/modules/interface/param_logic.h \
+  /home/darren/Documents/crazyflie-firmware/src/modules/interface/crtp.h \
+  /home/darren/Documents/crazyflie-firmware/src/utils/interface/num.h \
   /usr/include/newlib/math.h \
+  /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults.h \
+    $(wildcard include/config/platform/cf2.h) \
+    $(wildcard include/config/platform/cf21bl.h) \
+    $(wildcard include/config/platform/bolt.h) \
+    $(wildcard include/config/platform/tag.h) \
+    $(wildcard include/config/platform/flapper.h) \
+  /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults_cf2.h \
 
 src/modules/src/power_distribution_quadrotor.o: $(deps_src/modules/src/power_distribution_quadrotor.o)
 

@@ -33,6 +33,13 @@ deps_src/modules/src/controller/controller_brescianini.o := \
   /usr/include/newlib/sys/cdefs.h \
   /usr/include/newlib/_ansi.h \
   /home/darren/Documents/crazyflie-firmware/src/utils/interface/physicalConstants.h \
+  /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults.h \
+    $(wildcard include/config/platform/cf2.h) \
+    $(wildcard include/config/platform/cf21bl.h) \
+    $(wildcard include/config/platform/bolt.h) \
+    $(wildcard include/config/platform/tag.h) \
+    $(wildcard include/config/platform/flapper.h) \
+  /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults_cf2.h \
 
 src/modules/src/controller/controller_brescianini.o: $(deps_src/modules/src/controller/controller_brescianini.o)
 

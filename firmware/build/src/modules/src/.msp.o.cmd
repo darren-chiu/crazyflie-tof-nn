@@ -87,7 +87,7 @@ deps_src/modules/src/msp.o := \
   /usr/include/newlib/strings.h \
   /usr/include/newlib/sys/string.h \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform.h \
-    $(wildcard include/config/sensors/bmi088/bmp388.h) \
+    $(wildcard include/config/sensors/bmi088/bmp3xx.h) \
     $(wildcard include/config/sensors/bmi088/spi.h) \
     $(wildcard include/config/sensors/mpu9250/lps25h.h) \
     $(wildcard include/config/sensors/bosch.h) \

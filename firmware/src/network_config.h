@@ -11,6 +11,7 @@
 
 #ifndef NETWORK_CONFIG_H
 #define NETWORK_CONFIG_H
+
 #include <math.h>
 #include <stdbool.h>
 #include <string.h>
@@ -22,8 +23,6 @@
 /**
  * BASIC NETWORK SETTINGS
  */
-// Enable print statements for communication
-// #define DEBUG_COMMUNICATION
 
 // Enable print statements
 // #define DEBUG_LOCALIZATION
@@ -36,11 +35,6 @@
 #define REL_XYZ true
 #define REL_ROT true
 
-// Toggle input normalization
-// #define ENABLE_INPUT_NORM
-// Used for network input normalization
-#define NORM_EPS 0.00001
-
 /**
  * OBSERVATION SETTINGS
  */
@@ -48,7 +42,8 @@
 #define TOF_ENABLE
 
 // When defined, uses 4x4 as ToF input with corresponding controller
-#define ENABLE_4X4_CONTROLLER 
+// #define ENABLE_4X4_CONTROLLER
+
 #ifdef ENABLE_4X4_CONTROLLER
 	#define OBST_DIM 16	
 #else
@@ -58,7 +53,7 @@
 #define NUM_SENSORS 4
 
 // Obstacle Avoidance Parameters
-#define OBST_MAX 2.0f
+#define OBST_MAX 1.0f
 // Sets at which height to accept ToF readings.
 #define SAFE_HEIGHT 0.0f
 static uint16_t tof_addresses[NUM_SENSORS] = {0x50, 0x66, 0x76, 0x86};
@@ -68,8 +63,10 @@ static uint16_t tof_addresses[NUM_SENSORS] = {0x50, 0x66, 0x76, 0x86};
 /**
  * MULTI DRONE SETTINGS
  */
-//Enable Multi Drone
-#define MULTI_DRONE_ENABLE
+
+// Enable Multi Drone
+// 
+// #define MULTI_DRONE_ENABLE
 
 // Number of TOTAL drones (this includes yourself)
 #define NUM_DRONES 4
@@ -79,6 +76,8 @@ static uint16_t tof_addresses[NUM_SENSORS] = {0x50, 0x66, 0x76, 0x86};
 // How many ms between each broadcast 
 #define BROADCAST_PERIOD_MS 100
 // #define ENABLE_NEIGHBOR_REL_VEL
+
+#define ABLATE_NEIGHBOR true
 
 // Communication Port
 #define P2P_PORT 5

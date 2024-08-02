@@ -4,7 +4,7 @@ source_src/platform/src/platform_cf2.o := /home/darren/Documents/crazyflie-firmw
 
 deps_src/platform/src/platform_cf2.o := \
     $(wildcard include/config/sensors/mpu9250/lps25h.h) \
-    $(wildcard include/config/sensors/bmi088/bmp388.h) \
+    $(wildcard include/config/sensors/bmi088/bmp3xx.h) \
   /usr/include/newlib/string.h \
   /usr/include/newlib/_ansi.h \
   /usr/include/newlib/newlib.h \

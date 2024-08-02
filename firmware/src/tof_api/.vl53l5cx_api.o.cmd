@@ -30,7 +30,7 @@ deps_/home/darren/Documents/crazyflie-tof-nn/firmware/src/tof_api/vl53l5cx_api.o
   /usr/lib/gcc/arm-none-eabi/10.3.1/include/stdint.h \
   /home/darren/Documents/crazyflie-tof-nn/firmware/src/tof_api/vl53l5cx_buffers.h \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform.h \
-    $(wildcard include/config/sensors/bmi088/bmp388.h) \
+    $(wildcard include/config/sensors/bmi088/bmp3xx.h) \
     $(wildcard include/config/sensors/bmi088/spi.h) \
     $(wildcard include/config/sensors/mpu9250/lps25h.h) \
     $(wildcard include/config/sensors/bosch.h) \

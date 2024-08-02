@@ -8,6 +8,7 @@ deps_src/modules/src/controller/controller.o := \
     $(wildcard include/config/controller/indi.h) \
     $(wildcard include/config/controller/mellinger.h) \
     $(wildcard include/config/controller/brescianini.h) \
+    $(wildcard include/config/controller/lee.h) \
   /home/darren/Documents/crazyflie-firmware/src/utils/interface/debug.h \
     $(wildcard include/config/debug/print/on/uart1.h) \
   /home/darren/Documents/crazyflie-firmware/src/config/config.h \
@@ -58,6 +59,7 @@ deps_src/modules/src/controller/controller.o := \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/controller/position_controller_indi.h \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/controller/controller_indi.h \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/controller/controller_brescianini.h \
+  /home/darren/Documents/crazyflie-firmware/src/modules/interface/controller/controller_lee.h \
 
 src/modules/src/controller/controller.o: $(deps_src/modules/src/controller/controller.o)
 

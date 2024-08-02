@@ -3,7 +3,7 @@ cmd_src/hal/src/sensors.o := arm-none-eabi-gcc -Wp,-MD,src/hal/src/.sensors.o.d 
 source_src/hal/src/sensors.o := /home/darren/Documents/crazyflie-firmware/src/hal/src/sensors.c
 
 deps_src/hal/src/sensors.o := \
-    $(wildcard include/config/sensors/bmi088/bmp388.h) \
+    $(wildcard include/config/sensors/bmi088/bmp3xx.h) \
     $(wildcard include/config/sensors/bmi088/spi.h) \
     $(wildcard include/config/sensors/mpu9250/lps25h.h) \
     $(wildcard include/config/sensors/bosch.h) \
@@ -69,7 +69,7 @@ deps_src/hal/src/sensors.o := \
   /home/darren/Documents/crazyflie-firmware/src/modules/interface/console.h \
   /home/darren/Documents/crazyflie-firmware/src/utils/interface/eprintf.h \
   /usr/lib/gcc/arm-none-eabi/10.3.1/include/stdarg.h \
-  /home/darren/Documents/crazyflie-firmware/src/hal/interface/sensors_bmi088_bmp388.h \
+  /home/darren/Documents/crazyflie-firmware/src/hal/interface/sensors_bmi088_bmp3xx.h \
   /home/darren/Documents/crazyflie-firmware/src/hal/interface/sensors.h \
   /home/darren/Documents/crazyflie-firmware/src/hal/interface/sensors_mpu9250_lps25h.h \
 

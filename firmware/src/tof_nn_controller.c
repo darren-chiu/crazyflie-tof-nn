@@ -42,7 +42,7 @@ static control_t_n control_nn;
 static uint8_t sensor_status;
 static VL53L5CX_Configuration tof_config;
 
-static uint16_t freq = 250;
+static uint16_t freq = 1000;
 
 // Dynamics Parameters
 static float state_array[STATE_DIM];
@@ -116,27 +116,6 @@ static uint16_t thrust_offset = 600;
 
 #endif
 
-#ifdef ENABLE_INPUT_NORM
-	/**
-	 * Normalizes input based on a z-score normalization. The mean and standard deviaiton are obtained from 
-	 * sample factoriy's running mean and std.
-	 *  See running_mean_std.py in sample_factory library.
-	 *  x_hat = (x - u) / o
-	 */
-	void normalize_inputs(float *state_array, volatile float obstacle_inputs[OBST_DIM], 
-	float mean_array[OBST_DIM + STATE_DIM], float std_array[OBST_DIM + STATE_DIM]) {
-		for (int i = 0; i < (OBST_DIM + STATE_DIM); i++) {
-			if (i < STATE_DIM) {
-				state_array[i] = (state_array[i] - mean_array[i]) / std_array[i];
-			}
-
-			if (i >= STATE_DIM) { 
-				obstacle_inputs[i] = (obstacle_inputs[i] - mean_array[i]) / std_array[i];
-			}
-		}
-	}
-
-#endif 
 /**
  * @brief Scale the given V to a range from 0 to 1.
  */
@@ -202,7 +181,7 @@ void appMain() {
 	while(1) {
 		vTaskDelay(M2T(100));
 		#ifdef DEBUG_LOCALIZATION
-			DEBUG_PRINT("Estimation: (%f,%f,%f)\n", getX(), getY(), getZ());
+			// DEBUG_PRINT("Estimation: (%f,%f,%f)\n", getX(), getY(), getZ());
 			// DEBUG_PRINT("Desired: (%f,%f,%f)\n", setpoint->position.x,setpoint->position.y,setpoint->position.z);
 			// DEBUG_PRINT("ERROR: (%f,%f,%f)\n", -1*state_array[0], -1*state_array[1], -1*state_array[2]);
 			// DEBUG_PRINT("ToF: (%f,%f,%f,%f,%f,%f,%f,%f)\n", obstacle_inputs[0], obstacle_inputs[1], obstacle_inputs[2], obstacle_inputs[3], obstacle_inputs[4], obstacle_inputs[5], obstacle_inputs[6], obstacle_inputs[7]);
@@ -318,10 +297,6 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 		state_array[17] = omega_yaw;
 	}
 
-	#ifdef ENABLE_INPUT_NORM
-		normalize_inputs(state_array, obstacle_inputs, mean_array, std_array);
-	#endif
-	
 	#ifdef TOF_ENABLE
 		if (!isToFStale) {
 			isToFStale = process_obst(state, obstacle_inputs, (uint16_t* )tof_input, (uint8_t* ) tof_status);
@@ -332,6 +307,7 @@ void controllerOutOfTree(control_t *control, const setpoint_t *setpoint, const s
 	#ifdef MULTI_DRONE_ENABLE
 		updateNeighborInputs(state, neighbor_inputs);
 		neighborEmbedder(neighbor_inputs);  
+		singleHeadAttention();
 	#endif
 
 
