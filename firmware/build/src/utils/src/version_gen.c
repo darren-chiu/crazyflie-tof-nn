@@ -36,7 +36,7 @@ const char * V_SLOCAL_REVISION="0";
 const char * V_SREVISION="2a3e61428392";
 const char * V_STAG="NA";
 const char * V_BRANCH="nn_controller";
-const bool V_MODIFIED=false;
+const bool V_MODIFIED=true;
 const bool V_PRODUCTION_RELEASE=false;
 
 /* Version recoverable from the ground */
