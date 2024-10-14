@@ -3,6 +3,8 @@
 
 //The order which allows us to use the ToF in clockwise order
 static uint8_t pin_order[4] = {0, 2, 1, 3}; 
+// static uint8_t pin_order[4] = {0, 1, 2, 3}; 
+
 
 void tof_disable_all() {
     bool I2C_expander_status;
@@ -130,6 +132,7 @@ bool process_obst(const state_t *state, volatile float *obstacle_inputs, uint16_
 
                         obst_cap = tof_input[sensor_index + spad_index] * 1.0f;
                         obst_cap = obst_cap / 1000.0f;
+                        obst_cap = floorf(obst_cap * 100) / 100;
 
                         if ((obst_cap > OBST_MAX)) {
                             obst_cap = OBST_MAX;

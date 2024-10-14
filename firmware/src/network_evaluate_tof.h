@@ -35,4 +35,8 @@ void obstacleEmbedder(volatile float obstacle_inputs[OBST_DIM]);
  */
 void neighborEmbedder(volatile float neighbor_inputs[NEIGHBORS*NBR_OBS_DIM]);
 
+#ifdef MULTI_DRONE_ENABLE
+void singleHeadAttention();
+#endif
+
 #endif

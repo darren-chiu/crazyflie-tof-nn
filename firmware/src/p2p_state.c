@@ -75,24 +75,31 @@ static void p2pcallbackHandler(P2PPacket *p){
     }
 }
 
-void updateNeighborInputs(const state_t *state, float *neighbor_inputs) {
+void updateNeighborInputs(const state_t *state, volatile float *neighbor_inputs) {
     int indexarray[2] = {index1, index2};
     for (int i=0;i<NEIGHBORS;i++) {
         if (ABLATE_NEIGHBOR) {
-            neighbor_inputs[0 + (i*NBR_OBS_DIM)] = 8;
-            neighbor_inputs[1 + (i*NBR_OBS_DIM)] = 8;
-            neighbor_inputs[2 + (i*NBR_OBS_DIM)] = 8;
+            neighbor_inputs[0 + (i*NBR_OBS_DIM)] = 5;
+            neighbor_inputs[1 + (i*NBR_OBS_DIM)] = 5;
+            neighbor_inputs[2 + (i*NBR_OBS_DIM)] = 5;
+
+            #ifdef ENABLE_NEIGHBOR_REL_VEL
+                neighbor_inputs[3 + (i*NBR_OBS_DIM)] = 0;
+                neighbor_inputs[4 + (i*NBR_OBS_DIM)] = 0;
+                neighbor_inputs[5 + (i*NBR_OBS_DIM)] = 0;
+            #endif
+            
         } else {
             neighbor_inputs[0 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].x_pos - state->position.x;
             neighbor_inputs[1 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].y_pos - state->position.y;
             neighbor_inputs[2 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].z_pos - state->position.z;
+
+            #ifdef ENABLE_NEIGHBOR_REL_VEL
+                neighbor_inputs[3 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].x_vel - state->velocity.x;
+                neighbor_inputs[4 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].y_vel - state->velocity.y;
+                neighbor_inputs[5 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].z_vel - state->velocity.z;
+            #endif
         }
-        
-        #ifdef ENABLE_NEIGHBOR_REL_VEL
-            neighbor_inputs[3 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].x_vel - state->velocity.x;
-            neighbor_inputs[4 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].y_vel - state->velocity.y;
-            neighbor_inputs[5 + (i*NBR_OBS_DIM)] = neighbor_array[indexarray[i]].z_vel - state->velocity.z;
-        #endif
     }
 }
 

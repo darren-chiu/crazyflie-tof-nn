@@ -62,7 +62,7 @@ void broadcastState(message_state_t tx_message);
 
 float get_dist(float *p1, float *p2);
 
-void updateNeighborInputs(const state_t *state, float *neighbor_inputs);
+void updateNeighborInputs(const state_t *state, volatile float *neighbor_inputs);
 
 // 
 void initLogIds();

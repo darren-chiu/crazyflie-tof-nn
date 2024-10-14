@@ -28,7 +28,7 @@
 // #define DEBUG_LOCALIZATION
 
 //Boolean for CTBR
-#define USE_CTBR true
+#define USE_CTBR false
 
 // Defines the dynamics dimmensions
 #define STATE_DIM 18
@@ -41,7 +41,7 @@
  * OBSERVATION SETTINGS
  */
 // When defined, enables the ToF module.
-// #define TOF_ENABLE
+#define TOF_ENABLE
 
 // When defined, uses 4x4 as ToF input with corresponding controller
 // #define ENABLE_4X4_CONTROLLER
@@ -67,19 +67,23 @@ static uint16_t tof_addresses[NUM_SENSORS] = {0x50, 0x66, 0x76, 0x86};
  */
 
 // Enable Multi Drone
-// 
-// #define MULTI_DRONE_ENABLE
+#define MULTI_DRONE_ENABLE
 
 // Number of TOTAL drones (this includes yourself)
-#define NUM_DRONES 4
+#define NUM_DRONES 3
 //Size of the neighbor encoder for the network
 #define NEIGHBORS 2
-#define NBR_OBS_DIM 3
 // How many ms between each broadcast 
 #define BROADCAST_PERIOD_MS 100
-// #define ENABLE_NEIGHBOR_REL_VEL
+#define ENABLE_NEIGHBOR_REL_VEL
 
-#define ABLATE_NEIGHBOR false
+#ifdef ENABLE_NEIGHBOR_REL_VEL
+	#define NBR_OBS_DIM 6
+#else
+	#define NBR_OBS_DIM 3
+#endif
+
+#define ABLATE_NEIGHBOR true
 
 // Communication Port
 #define P2P_PORT 5
