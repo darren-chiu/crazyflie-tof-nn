@@ -402,3 +402,5 @@ models/
 
 # Data Folder
 data/
+
+firmware/build/

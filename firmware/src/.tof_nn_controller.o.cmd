@@ -87,7 +87,6 @@ deps_/home/darren/Documents/crazyflie-tof-nn/firmware/src/tof_nn_controller.o :=
   /home/darren/Documents/crazyflie-tof-nn/firmware/src/network_evaluate_tof.h \
   /home/darren/Documents/crazyflie-firmware/src/platform/interface/platform_defaults.h \
     $(wildcard include/config/platform/cf2.h) \
-    $(wildcard include/config/platform/cf21bl.h) \
     $(wildcard include/config/platform/bolt.h) \
     $(wildcard include/config/platform/tag.h) \
     $(wildcard include/config/platform/flapper.h) \
