@@ -21,7 +21,7 @@ typedef struct control_t_n {
  * @param state_array 
  * @param obstacle_embeds 
  */
-void networkEvaluate(control_t_n *control_n, const float *state_array);
+void networkEvaluate(control_t_n *control_n,float *state_array);
 
 /**
  * @brief Encodes the input array of ToF readings.
